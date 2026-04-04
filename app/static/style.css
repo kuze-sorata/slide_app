@@ -431,11 +431,11 @@ button:disabled {
 .side-panel {
   display: grid;
   gap: 20px;
+  align-content: start;
 }
 
-.sticky-panel {
-  position: sticky;
-  top: 20px;
+.control-panel {
+  position: static;
 }
 
 .preview-panel {
@@ -503,6 +503,7 @@ h2 {
   align-items: flex-start;
   gap: 16px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .panel-heading.no-margin {
@@ -1036,14 +1037,19 @@ textarea {
     display: none;
   }
 
-  .sticky-panel {
-    position: static;
-  }
-
   .footer-actions,
   .info-strip {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .button-row.vertical .primary-button,
+  .button-row.vertical .secondary-button {
+    width: 100%;
   }
 
   h1 {

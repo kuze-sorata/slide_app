@@ -25,30 +25,30 @@
 
       <section class="workspace">
         <aside class="side-panel">
-          <div class="panel sticky-panel">
-            <div class="section-cap">そうさパネル</div>
+          <div class="panel control-panel">
+            <div class="section-cap">操作パネル</div>
             <h2>操作</h2>
             <p class="help-text">
               タイトルと箇条書きはカード上で直接編集できます。保存時に JSON を再検証します。
             </p>
             <div class="preview-stats">
               <div class="stat-box">
-                <span class="stat-label">ゆうしゃのしょ</span>
+                <span class="stat-label">資料タイトル</span>
                 <strong id="sidebar-title">未読み込み</strong>
               </div>
               <div class="stat-box">
-                <span class="stat-label">まいすう</span>
+                <span class="stat-label">スライド枚数</span>
                 <strong id="slide-count-badge">-</strong>
               </div>
             </div>
             <div class="button-row vertical">
               <button id="save-json-button" class="primary-button" type="button">JSONを更新</button>
-              <button id="export-marp-button" class="secondary-button" type="button">Marp Markdownを出力</button>
-              <button id="export-pdf-button" class="secondary-button" type="button">PDFを出力</button>
-              <button id="export-pptx-button" class="secondary-button" type="button">PPTXを出力</button>
+              <button id="export-marp-button" class="secondary-button" type="button">Marp Markdownを書き出し</button>
+              <button id="export-pdf-button" class="secondary-button" type="button">PDFを書き出し</button>
+              <button id="export-pptx-button" class="secondary-button" type="button">PPTXを書き出し</button>
             </div>
             <div class="tips-card">
-              <h3>こうりゃくのヒント</h3>
+              <h3>編集のヒント</h3>
               <ul class="summary-list compact">
                 <li>1枚につき主張は1つに絞る</li>
                 <li>箇条書きは3点以内を維持する</li>
@@ -60,7 +60,7 @@
           <div class="panel">
             <div class="panel-heading">
               <h2>プレゼン構成JSON</h2>
-              <button id="apply-json-button" class="text-button" type="button">JSONを反映</button>
+              <button id="apply-json-button" class="text-button" type="button">JSONを適用</button>
             </div>
             <textarea id="presentation-json" class="json-editor" spellcheck="false"></textarea>
           </div>

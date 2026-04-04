@@ -1,9 +1,13 @@
 {% for slide in presentation.slides %}
 <article class="slide-card" data-slide-id="{{ slide.id }}">
   <div class="slide-meta">
-    <span class="slide-number">だん {{ slide.id }}</span>
-    <span class="slide-type">{{ slide.type }}</span>
-    <span class="slide-type">{{ slide.layout }}</span>
+    <span class="slide-number">{{ loop.index }}枚目</span>
+    <span class="slide-type">
+      {% if slide.type == "title" %}表紙{% elif slide.type == "agenda" %}アジェンダ{% elif slide.type == "content" %}本文{% elif slide.type == "summary" %}まとめ{% else %}{{ slide.type }}{% endif %}
+    </span>
+    <span class="slide-type">
+      {% if slide.layout == "layout1" %}レイアウト1{% elif slide.layout == "layout2" %}レイアウト2{% elif slide.layout == "layout3" %}レイアウト3{% elif slide.layout == "layout4" %}レイアウト4{% else %}{{ slide.layout }}{% endif %}
+    </span>
   </div>
   <div class="slide-accent" aria-hidden="true"></div>
   <h3

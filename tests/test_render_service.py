@@ -41,4 +41,4 @@ def test_render_preview_html_contains_editable_slide_fields() -> None:
     assert 'contenteditable="true"' in html
     assert "営業進捗の共有" in html
     assert 'data-slide-id="slide-2"' in html
-    assert "layout2" in html
+    assert "レイアウト2" in html
