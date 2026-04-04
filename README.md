@@ -296,6 +296,8 @@ Marp / Chrome の解決結果を返します。
 - 改善テーマごとに branch を切る
 - fixed input で Before / After を比べる
 - PR に仮説、確認方法、リスクを書く
+- 品質改善や挙動変更を伴う作業では、`docs/experiments/YYYY-MM-DD-<topic>.md` に実験ログを残す
+- 実験ログには、仮説、対象入力、変更内容、Before / After、残課題を必ず含める
 
 ## テスト
 

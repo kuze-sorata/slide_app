@@ -69,6 +69,8 @@
 - exporter はユーザーが明示操作した時だけ動かす
 - prompt builder / provider / parser / domain model / renderer / exporter を分離する
 - 必要最小限の差分で移行する
+- 品質改善や挙動変更を伴う作業では、`docs/experiments/YYYY-MM-DD-<topic>.md` に実験ログを残す
+- 実験ログには、仮説、対象入力、変更内容、Before / After、残課題を記録する
 
 # 対象ユーザー
 - 社内資料作成者
@@ -302,6 +304,7 @@ app/
 - コメントは最小限で意図が分かるようにする
 - 例外処理を入れる
 - README を最新要件に更新する
+- 実験的な変更や品質改善を行った場合は、`docs/experiments/` にログを追加または更新する
 - requirements.txt を必要に応じて更新する
 - サンプル入力とサンプル出力 JSON を用意する
 - 可能なら pytest で最低限のテストを追加する
