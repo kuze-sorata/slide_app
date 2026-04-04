@@ -1,0 +1,10 @@
+{
+  "theme": "営業進捗の振り返り",
+  "objective": "上司に現状と打ち手を簡潔に共有する",
+  "audience": "営業部長",
+  "slide_count": 5,
+  "tone": "簡潔で落ち着いた説明",
+  "extra_notes": "数字は仮置きでよい",
+  "required_points": ["進捗", "課題", "次の打ち手"],
+  "forbidden_expressions": ["気合いで", "なんとなく"]
+}

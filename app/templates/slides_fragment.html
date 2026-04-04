@@ -1,0 +1,37 @@
+{% for slide in presentation.slides %}
+<article class="slide-card" data-slide-id="{{ slide.id }}">
+  <div class="slide-meta">
+    <span class="slide-number">だん {{ slide.id }}</span>
+    <span class="slide-type">{{ slide.type }}</span>
+    <span class="slide-type">{{ slide.layout }}</span>
+  </div>
+  <div class="slide-accent" aria-hidden="true"></div>
+  <h3
+    class="editable-title"
+    contenteditable="true"
+    data-field="title"
+    data-slide-id="{{ slide.id }}"
+  >{{ slide.title }}</h3>
+  <ul class="bullet-list">
+    {% if slide.bullets %}
+      {% for bullet in slide.bullets %}
+      <li
+        class="editable-bullet"
+        contenteditable="true"
+        data-field="bullet"
+        data-slide-id="{{ slide.id }}"
+        data-bullet-index="{{ loop.index0 }}"
+      >{{ bullet }}</li>
+      {% endfor %}
+    {% else %}
+      <li
+        class="editable-bullet empty-bullet"
+        contenteditable="true"
+        data-field="bullet"
+        data-slide-id="{{ slide.id }}"
+        data-bullet-index="0"
+      ></li>
+    {% endif %}
+  </ul>
+</article>
+{% endfor %}

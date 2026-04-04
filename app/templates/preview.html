@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ app_name }} | プレビュー</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
+  </head>
+  <body data-page="preview">
+    <div class="page-noise" aria-hidden="true"></div>
+    <div class="page-orb orb-a" aria-hidden="true"></div>
+    <div class="page-orb orb-c" aria-hidden="true"></div>
+    <div class="pixel-stars" aria-hidden="true"></div>
+    <div class="aurora-ribbon ribbon-a" aria-hidden="true"></div>
+    <div class="aurora-ribbon ribbon-c" aria-hidden="true"></div>
+    <main class="page-shell">
+      <header class="topbar">
+        <div class="topbar-copy">
+          <p class="eyebrow">プレビュー</p>
+          <h1>スライド草案の確認</h1>
+          <p class="topbar-text">カード編集と JSON 編集を並行できるようにし、更新時に再検証します。</p>
+        </div>
+        <a class="link-button" href="/">入力に戻る</a>
+      </header>
+
+      <section class="workspace">
+        <aside class="side-panel">
+          <div class="panel sticky-panel">
+            <div class="section-cap">そうさパネル</div>
+            <h2>操作</h2>
+            <p class="help-text">
+              タイトルと箇条書きはカード上で直接編集できます。保存時に JSON を再検証します。
+            </p>
+            <div class="preview-stats">
+              <div class="stat-box">
+                <span class="stat-label">ゆうしゃのしょ</span>
+                <strong id="sidebar-title">未読み込み</strong>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">まいすう</span>
+                <strong id="slide-count-badge">-</strong>
+              </div>
+            </div>
+            <div class="button-row vertical">
+              <button id="save-json-button" class="primary-button" type="button">JSONを更新</button>
+              <button id="export-marp-button" class="secondary-button" type="button">Marp Markdownを出力</button>
+              <button id="export-pdf-button" class="secondary-button" type="button">PDFを出力</button>
+              <button id="export-pptx-button" class="secondary-button" type="button">PPTXを出力</button>
+            </div>
+            <div class="tips-card">
+              <h3>こうりゃくのヒント</h3>
+              <ul class="summary-list compact">
+                <li>1枚につき主張は1つに絞る</li>
+                <li>箇条書きは3点以内を維持する</li>
+                <li>結論がタイトルで伝わる状態にする</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>プレゼン構成JSON</h2>
+              <button id="apply-json-button" class="text-button" type="button">JSONを反映</button>
+            </div>
+            <textarea id="presentation-json" class="json-editor" spellcheck="false"></textarea>
+          </div>
+        </aside>
+
+        <section class="preview-panel">
+          <div class="preview-header panel">
+            <div class="panel-heading no-margin">
+              <div>
+                <p class="eyebrow">スライド</p>
+                <h2 id="presentation-title">プレビュー</h2>
+                <div class="xp-bar" aria-hidden="true">
+                  <span class="xp-fill"></span>
+                </div>
+                <div class="preview-meta">
+                  <span class="meta-pill">カード編集</span>
+                  <span class="meta-pill">JSON正本</span>
+                  <span class="meta-pill">Marp出力</span>
+                </div>
+              </div>
+              <p id="status-message" class="status-message">生成結果を読み込み中です。</p>
+            </div>
+          </div>
+          <div class="slides-toolbar">
+            <p class="slides-toolbar-text">左から右へ読む順でカード表示しています。タイトルを先に、補足は短く保つと資料としてまとまりやすくなります。</p>
+          </div>
+          <div id="slides-root" class="slides-grid"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', path='app.js') }}" defer></script>
+  </body>
+</html>
