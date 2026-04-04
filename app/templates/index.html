@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ app_name }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20260404-natural-input" />
   </head>
   <body data-page="index">
     <div class="page-noise" aria-hidden="true"></div>
@@ -92,69 +92,80 @@
           <div class="form-intro">
             <div class="info-strip">
               <span class="info-kicker">推奨</span>
-              <p>会議資料や上司向け説明資料なら、5〜7枚にすると構成が安定しやすくなります。</p>
+              <p>まずは自然文で、誰向けに何を伝えたいかを書いてください。細かい項目は下の詳細設定で補えます。</p>
             </div>
             <div class="input-hints">
               <div class="hint-card">
-                <h3>テーマ</h3>
-                <p>資料全体で答えたい問いを短く置きます。</p>
+                <h3>自然文入力</h3>
+                <p>相手、目的、入れたい論点、制約を一続きで書くと生成品質が上がります。</p>
               </div>
               <div class="hint-card">
-                <h3>目的</h3>
-                <p>共有、意思決定、相談など、読み手に期待する行動を明確にします。</p>
+                <h3>補助入力</h3>
+                <p>枚数やトーン、必須論点は詳細設定で上書きできます。</p>
               </div>
               <div class="hint-card">
-                <h3>制約</h3>
-                <p>入れたい観点や避けたい表現を書くと、日本語のトーンが安定します。</p>
+                <h3>おすすめの書き方</h3>
+                <p>「誰向けに、何を共有したいか、何を入れたいか」をそのまま書いてください。</p>
               </div>
             </div>
           </div>
 
           <div class="form-grid">
-            <label class="field">
-              <span>テーマ</span>
-              <small class="field-help">資料の中心テーマ</small>
-              <input name="theme" required value="営業進捗の振り返り" />
-            </label>
-            <label class="field">
-              <span>資料の目的</span>
-              <small class="field-help">何を伝え、どう動いてほしいか</small>
-              <input name="objective" required value="上司に現状と打ち手を簡潔に共有する" />
-            </label>
-            <label class="field">
-              <span>想定読者</span>
-              <small class="field-help">上司、役員、関係部署など</small>
-              <input name="audience" required value="営業部長" />
+            <label class="field wide field-primary">
+              <span>資料リクエスト</span>
+              <small class="field-help">自然文で、相手・目的・入れたい論点・制約を書いてください</small>
+              <textarea name="user_request" rows="6" required>営業部長向けに、営業進捗の振り返りを5枚で共有したい。現状の進捗、課題、次の打ち手を簡潔に整理したい。数字は仮置きでよく、会議でそのまま説明しやすい表現にしたい。</textarea>
             </label>
             <label class="field">
               <span>想定スライド枚数</span>
-              <small class="field-help">2〜10枚</small>
-              <input name="slide_count" type="number" min="2" max="10" value="5" required />
+              <small class="field-help">3〜10枚</small>
+              <input name="slide_count" type="number" min="3" max="10" value="5" required />
             </label>
             <label class="field">
               <span>トーン</span>
               <small class="field-help">省略可</small>
               <input name="tone" value="簡潔で落ち着いた説明" />
             </label>
-            <label class="field wide">
-              <span>補足メモ</span>
-              <small class="field-help">背景や制約条件を補足</small>
-              <textarea name="extra_notes">数字は仮置きでよい</textarea>
-            </label>
-            <label class="field">
-              <span>入れたい観点</span>
-              <small class="field-help">改行区切りで複数入力</small>
-              <textarea name="required_points">進捗
+          </div>
+
+          <details class="panel-subsection">
+            <summary>詳細設定</summary>
+            <div class="form-grid details-grid">
+              <label class="field">
+                <span>テーマ</span>
+                <small class="field-help">空欄なら自然文から補完</small>
+                <input name="theme" value="" />
+              </label>
+              <label class="field">
+                <span>資料の目的</span>
+                <small class="field-help">空欄なら自然文から補完</small>
+                <input name="objective" value="" />
+              </label>
+              <label class="field">
+                <span>想定読者</span>
+                <small class="field-help">空欄なら自然文から補完</small>
+                <input name="audience" value="" />
+              </label>
+              <label class="field wide">
+                <span>補足メモ</span>
+                <small class="field-help">背景や制約条件を補足</small>
+                <textarea name="extra_notes">数字は仮置きでよい</textarea>
+              </label>
+              <label class="field">
+                <span>必ず入れたい論点</span>
+                <small class="field-help">改行区切りで複数入力</small>
+                <textarea name="required_points">進捗
 課題
 次の打ち手</textarea>
-            </label>
-            <label class="field">
-              <span>避けたい表現</span>
-              <small class="field-help">改行区切りで複数入力</small>
-              <textarea name="forbidden_expressions">気合いで
+              </label>
+              <label class="field">
+                <span>避けたい表現</span>
+                <small class="field-help">改行区切りで複数入力</small>
+                <textarea name="forbidden_expressions">気合いで
 なんとなく</textarea>
-            </label>
-          </div>
+              </label>
+            </div>
+          </details>
 
           <div class="footer-actions">
             <div class="footer-note">
@@ -169,6 +180,6 @@
       </section>
     </main>
 
-    <script src="{{ url_for('static', path='app.js') }}" defer></script>
+    <script src="{{ url_for('static', path='app.js') }}?v=20260404-natural-input" defer></script>
   </body>
 </html>

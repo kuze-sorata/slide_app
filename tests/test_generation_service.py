@@ -122,6 +122,13 @@ def test_build_slide_generation_prompt_stays_json_focused() -> None:
     assert "Output ONLY valid JSON" in prompt
     assert '"deck_title":"string"' in prompt
     assert "layout1|layout2|layout3|layout4" in prompt
+    assert "Recommended slide plan" in prompt
+    assert "Content slide role menu" in prompt
+    assert "Design rules:" in prompt
+    assert "If a content slide has exactly 3 parallel points" in prompt
+    assert "Reading order should stay natural from left to right" in prompt
+    assert "layout3 should be used only when the content naturally splits" in prompt
+    assert "Do not invent concrete numbers" in prompt
     assert "Input:" in prompt
 
 
@@ -130,16 +137,17 @@ def test_build_simple_slide_generation_prompt_is_shorter() -> None:
         theme="営業進捗の振り返り",
         objective="現状と打ち手を共有する",
         audience="営業部長",
-        slide_count=3,
+        slide_count=5,
     )
 
     standard = build_slide_generation_prompt(payload)
     simple = build_simple_slide_generation_prompt(payload)
 
     assert len(simple) < len(standard)
-    assert "Return this JSON exactly." in simple
-    assert '"deck_title": "資料タイトル"' in simple
-    assert "Input:" not in simple
+    assert "Return JSON only." in simple
+    assert "Generate exactly 5 slides." in simple
+    assert "営業進捗の振り返り" in simple
+    assert "Input:" in simple
 
 
 class HangingOllamaClient(OllamaClient):
@@ -219,6 +227,110 @@ def test_normalize_presentation_payload_repairs_common_slide_shape_errors() -> N
     assert slides[1]["type"] == "content"
     assert slides[1]["layout"] == "layout2"
     assert slides[2]["type"] == "summary"
+
+
+def test_normalize_presentation_payload_makes_summary_action_oriented() -> None:
+    normalized = normalize_presentation_payload(
+        {
+            "deck_title": "案件整理",
+            "slides": [
+                {
+                    "id": "slide-1",
+                    "type": "title",
+                    "title": "案件整理",
+                    "bullets": ["部長向け共有"],
+                    "layout": "layout1",
+                },
+                {
+                    "id": "slide-2",
+                    "type": "content",
+                    "title": "重点案件の停滞が課題",
+                    "bullets": ["重点案件", "重点案件", "その他"],
+                    "layout": "layout2",
+                },
+                {
+                    "id": "slide-3",
+                    "type": "summary",
+                    "title": "案件優先度の再整理が必要",
+                    "bullets": ["確認中"],
+                    "layout": "layout4",
+                },
+            ],
+        }
+    )
+
+    assert normalized["slides"][1]["bullets"] == ["重点案件を整理する"]
+    assert normalized["slides"][2]["bullets"][0] == "重点案件を整理する"
+
+
+def test_normalize_presentation_payload_selects_layout3_for_action_content() -> None:
+    normalized = normalize_presentation_payload(
+        {
+            "deck_title": "営業進捗",
+            "slides": [
+                {
+                    "id": "slide-1",
+                    "type": "title",
+                    "title": "営業進捗",
+                    "bullets": ["部長向け共有"],
+                    "layout": "layout1",
+                },
+                {
+                    "id": "slide-2",
+                    "type": "content",
+                    "title": "対応方針を整理する",
+                    "bullets": ["重点案件へ工数を再配分する", "週次レビューを固定化する"],
+                    "layout": "layout2",
+                },
+                {
+                    "id": "slide-3",
+                    "type": "summary",
+                    "title": "次の打ち手を決める",
+                    "bullets": ["優先対応を決める"],
+                    "layout": "layout4",
+                },
+            ],
+        }
+    )
+
+    assert normalized["slides"][1]["layout"] == "layout3"
+
+
+def test_normalize_presentation_payload_keeps_layout2_for_two_cause_bullets() -> None:
+    normalized = normalize_presentation_payload(
+        {
+            "deck_title": "営業進捗",
+            "slides": [
+                {
+                    "id": "slide-1",
+                    "type": "title",
+                    "title": "営業進捗",
+                    "bullets": ["部長向け共有"],
+                    "layout": "layout1",
+                },
+                {
+                    "id": "slide-2",
+                    "type": "content",
+                    "title": "主要案件の停滞要因",
+                    "bullets": ["顧客ニーズの深掘り不足", "競合との差別化が不明確"],
+                    "layout": "layout3",
+                },
+                {
+                    "id": "slide-3",
+                    "type": "summary",
+                    "title": "今後の優先対応と決定事項",
+                    "bullets": ["確認中"],
+                    "layout": "layout4",
+                },
+            ],
+        }
+    )
+
+    assert normalized["slides"][1]["layout"] == "layout2"
+    assert normalized["slides"][2]["bullets"] == [
+        "顧客ニーズの深掘りを強化する",
+        "競合との差別化を明確化する",
+    ]
 
 
 def test_generation_service_from_settings_supports_gemini_provider() -> None:

@@ -83,3 +83,62 @@ async def test_api_provider_maps_rate_limit(monkeypatch: pytest.MonkeyPatch) -> 
 
     with pytest.raises(RuntimeError, match="rate limit"):
         await provider.generate_text("prompt")
+
+
+@pytest.mark.asyncio
+async def test_api_provider_falls_back_when_json_schema_is_unsupported(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = ApiHostedLLMClient(
+        api_key="test-key",
+        model="test-model",
+        base_url="https://api.example.com/v1",
+        max_retries=0,
+    )
+    payloads: list[dict[str, object]] = []
+
+    class DummyAsyncClient:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        async def __aenter__(self) -> "DummyAsyncClient":
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, tb: object) -> bool:
+            return False
+
+        async def post(
+            self,
+            url: str,
+            json: dict[str, object],
+            headers: dict[str, str],
+        ) -> httpx.Response:
+            payloads.append(json)
+            if len(payloads) == 1:
+                response = httpx.Response(
+                    400,
+                    request=httpx.Request("POST", url),
+                    text="response_format json_schema unsupported",
+                )
+                raise httpx.HTTPStatusError("bad request", request=response.request, response=response)
+            return httpx.Response(
+                200,
+                request=httpx.Request("POST", url),
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "content": '{"deck_title":"営業進捗","slides":[]}',
+                            }
+                        }
+                    ]
+                },
+            )
+
+    monkeypatch.setattr(httpx, "AsyncClient", DummyAsyncClient)
+
+    result = await provider.generate_text("prompt")
+
+    assert '"deck_title":"営業進捗"' in result
+    assert "response_format" in payloads[0]
+    assert "response_format" not in payloads[1]

@@ -71,8 +71,57 @@ def test_presentation_rejects_missing_content_slide() -> None:
 def test_slide_generation_request_requires_at_least_three_slides() -> None:
     with pytest.raises(ValidationError):
         SlideGenerationRequest(
-            theme="AIとは何か",
-            objective="初心者に説明する",
-            audience="大学生",
+            user_request="大学生向けにAIとは何かを2枚で説明したい",
             slide_count=2,
         )
+
+
+def test_slide_generation_request_derives_fields_from_user_request() -> None:
+    payload = SlideGenerationRequest(
+        user_request=(
+            "営業部長向けに営業進捗の振り返りを5枚で共有したい。"
+            "進捗、課題、次の打ち手を簡潔に整理したい。数字は仮置きでよい。"
+        ),
+        slide_count=5,
+    )
+
+    assert payload.audience == "営業部長"
+    assert payload.theme == "営業進捗の振り返り"
+    assert payload.objective == "進捗、課題、次の打ち手を簡潔に整理したい"
+    assert payload.required_points == ["進捗", "課題", "次の打ち手"]
+    assert payload.extra_notes == "数字は仮置きでよい / 簡潔にまとめる"
+
+
+def test_slide_generation_request_accepts_manual_override_with_user_request() -> None:
+    payload = SlideGenerationRequest(
+        user_request="役員会向けに新規商材の方針を4枚で説明したい",
+        theme="新規商材の提案方針",
+        objective="役員向けに判断ポイントを共有する",
+        audience="役員会",
+        slide_count=4,
+    )
+
+    assert payload.theme == "新規商材の提案方針"
+    assert payload.objective == "役員向けに判断ポイントを共有する"
+    assert payload.audience == "役員会"
+
+
+def test_slide_generation_request_falls_back_objective_for_review_style_prompt() -> None:
+    payload = SlideGenerationRequest(
+        user_request="営業部長向けに営業進捗の振り返りを5枚でまとめる",
+        slide_count=5,
+    )
+
+    assert payload.audience == "営業部長"
+    assert payload.theme == "営業進捗の振り返り"
+    assert payload.objective == "現状と課題を振り返り次の打ち手を整理する"
+
+
+def test_slide_generation_request_uses_generic_objective_fallback() -> None:
+    payload = SlideGenerationRequest(
+        user_request="開発部向けに新体制のオンボーディング資料を5枚で作る",
+        slide_count=5,
+    )
+
+    assert payload.audience == "開発部"
+    assert payload.objective == "要点を整理して共有する"

@@ -1,4 +1,5 @@
-from typing import Literal
+import re
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -91,9 +92,10 @@ class Presentation(BaseModel):
 
 
 class SlideGenerationRequest(BaseModel):
-    theme: str = Field(..., min_length=1, max_length=200)
-    objective: str = Field(..., min_length=1, max_length=200)
-    audience: str = Field(..., min_length=1, max_length=200)
+    user_request: str | None = Field(default=None, max_length=2000)
+    theme: str | None = Field(default=None, max_length=200)
+    objective: str | None = Field(default=None, max_length=200)
+    audience: str | None = Field(default=None, max_length=200)
     slide_count: int = Field(..., ge=3, le=10)
     tone: str | None = Field(default=None, max_length=100)
     extra_notes: str | None = Field(default=None, max_length=1000)
@@ -105,6 +107,7 @@ class SlideGenerationRequest(BaseModel):
     )
 
     @field_validator(
+        "user_request",
         "theme",
         "objective",
         "audience",
@@ -122,3 +125,167 @@ class SlideGenerationRequest(BaseModel):
     @classmethod
     def strip_text_list(cls, values: list[str]) -> list[str]:
         return [value.strip() for value in values if value.strip()]
+
+    @model_validator(mode="before")
+    @classmethod
+    def derive_fields_from_user_request(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        request_text = str(data.get("user_request") or "").strip()
+        if not request_text:
+            return data
+
+        if not data.get("audience"):
+            inferred_audience = infer_audience_from_request(request_text)
+            if inferred_audience:
+                data["audience"] = inferred_audience
+
+        if not data.get("theme"):
+            inferred_theme = infer_theme_from_request(request_text)
+            if inferred_theme:
+                data["theme"] = inferred_theme
+
+        if not data.get("objective"):
+            inferred_objective = infer_objective_from_request(request_text)
+            if inferred_objective:
+                data["objective"] = inferred_objective
+
+        if not data.get("extra_notes"):
+            inferred_notes = infer_extra_notes_from_request(request_text)
+            if inferred_notes:
+                data["extra_notes"] = inferred_notes
+
+        if not data.get("slide_count"):
+            inferred_slide_count = infer_slide_count_from_request(request_text)
+            if inferred_slide_count is not None:
+                data["slide_count"] = inferred_slide_count
+
+        if not data.get("required_points"):
+            inferred_points = infer_required_points_from_request(request_text)
+            if inferred_points:
+                data["required_points"] = inferred_points
+
+        return data
+
+    @model_validator(mode="after")
+    def validate_required_generation_context(self) -> "SlideGenerationRequest":
+        if not self.user_request and not (self.theme and self.objective and self.audience):
+            raise ValueError(
+                "資料リクエストを入力してください。詳細設定だけで送る場合は theme, objective, audience をすべて埋めてください"
+            )
+        if not self.theme:
+            raise ValueError("theme is required")
+        if not self.objective:
+            raise ValueError("objective is required")
+        if not self.audience:
+            raise ValueError("audience is required")
+        return self
+
+
+AUDIENCE_PATTERN = re.compile(
+    r"(?P<audience>[^\s、。]{1,20})(向け|に|用)(?:に)?",
+)
+SLIDE_COUNT_PATTERN = re.compile(r"(?P<count>[3-9]|10)枚")
+
+
+def infer_audience_from_request(text: str) -> str | None:
+    match = AUDIENCE_PATTERN.search(text)
+    if match:
+        audience = match.group("audience").strip("、。 ")
+        audience = audience.removesuffix("向け").removesuffix("用")
+        if audience and audience not in {"資料", "共有", "説明"}:
+            return audience
+    return None
+
+
+def infer_slide_count_from_request(text: str) -> int | None:
+    match = SLIDE_COUNT_PATTERN.search(text)
+    if match:
+        return int(match.group("count"))
+    return None
+
+
+def infer_theme_from_request(text: str) -> str | None:
+    patterns = (
+        r"(?P<theme>[^。]{1,40})を(?P<count>[3-9]|10)枚で",
+        r"(?P<theme>[^。]{1,40})について",
+        r"(?P<theme>[^。]{1,40})の資料",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            theme = match.group("theme").strip("、。 ")
+            theme = re.sub(r"^[^、。]{1,20}(向けに|向け|用に)", "", theme).strip("、。 ")
+            if theme:
+                return theme[:200]
+    first_sentence = text.split("。", 1)[0].strip()
+    if first_sentence:
+        return first_sentence[:200]
+    return None
+
+
+def infer_objective_from_request(text: str) -> str | None:
+    patterns = (
+        r"(?P<objective>[^。]*整理したい)",
+        r"(?P<objective>[^。]*決めたい)",
+        r"(?P<objective>[^。]*相談したい)",
+        r"(?P<objective>[^。]*説明したい)",
+        r"(?P<objective>[^。]*共有したい)",
+        r"(?P<objective>[^。]*確認したい)",
+        r"(?P<objective>[^。]*報告したい)",
+        r"(?P<objective>[^。]*提案したい)",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            objective = match.group("objective").strip("、。 ")
+            if objective:
+                return objective[:200]
+    if "確認" in text:
+        return "現状と論点を確認する"
+    if "報告" in text:
+        return "現状を簡潔に報告する"
+    if "レビュー" in text or "振り返り" in text:
+        return "現状と課題を振り返り次の打ち手を整理する"
+    if "共有" in text:
+        return "要点を簡潔に共有する"
+    if "提案" in text:
+        return "提案内容と判断ポイントを共有する"
+    if "説明" in text:
+        return "要点をわかりやすく説明する"
+    if "整理" in text:
+        return "論点を整理して共有する"
+    if text.strip():
+        return "要点を整理して共有する"
+    return None
+
+
+def infer_extra_notes_from_request(text: str) -> str | None:
+    notes: list[str] = []
+    if "仮置き" in text:
+        notes.append("数字は仮置きでよい")
+    if "簡潔" in text:
+        notes.append("簡潔にまとめる")
+    if "結論" in text:
+        notes.append("結論を先に示す")
+    if notes:
+        return " / ".join(dict.fromkeys(notes))
+    return None
+
+
+def infer_required_points_from_request(text: str) -> list[str]:
+    mapping = (
+        ("進捗", "進捗"),
+        ("課題", "課題"),
+        ("打ち手", "次の打ち手"),
+        ("対応", "次の打ち手"),
+        ("効果", "期待効果"),
+        ("意思決定", "意思決定事項"),
+        ("背景", "背景"),
+    )
+    points: list[str] = []
+    for keyword, label in mapping:
+        if keyword in text and label not in points:
+            points.append(label)
+    return points[:10]

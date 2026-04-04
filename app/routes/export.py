@@ -1,8 +1,8 @@
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import PlainTextResponse
-from starlette.concurrency import run_in_threadpool
 
 from app.models.schema import Presentation
 from app.services.export_service import ExportError, ExportService
@@ -71,7 +71,7 @@ async def export_pdf(
     service: ExportService = Depends(get_export_service),
 ) -> Response:
     try:
-        pdf_bytes = await run_in_threadpool(service.export_pdf, presentation)
+        pdf_bytes = await asyncio.to_thread(service.export_pdf, presentation)
     except ExportError as exc:
         logger.exception("PDF export failed")
         raise HTTPException(
@@ -98,7 +98,7 @@ async def export_pptx(
     service: ExportService = Depends(get_export_service),
 ) -> Response:
     try:
-        pptx_bytes = await run_in_threadpool(service.export_pptx, presentation)
+        pptx_bytes = await asyncio.to_thread(service.export_pptx, presentation)
     except ExportError as exc:
         logger.exception("PPTX export failed")
         raise HTTPException(

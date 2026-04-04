@@ -2,6 +2,7 @@ const STORAGE_KEY = "slide_app.presentation";
 const GENERATION_REQUEST_TIMEOUT_MS = 120000;
 const GENERATION_STALL_NOTICE_MS = 20000;
 let particleLayer = null;
+let currentPreviewSlideIndex = 0;
 
 function setStatus(message, isError = false, targetId = "status-message") {
   const node = document.getElementById(targetId);
@@ -23,9 +24,10 @@ function splitLines(value) {
 function buildGenerationPayload(form) {
   const formData = new FormData(form);
   return {
-    theme: String(formData.get("theme") || "").trim(),
-    objective: String(formData.get("objective") || "").trim(),
-    audience: String(formData.get("audience") || "").trim(),
+    user_request: String(formData.get("user_request") || "").trim() || null,
+    theme: String(formData.get("theme") || "").trim() || null,
+    objective: String(formData.get("objective") || "").trim() || null,
+    audience: String(formData.get("audience") || "").trim() || null,
     slide_count: Number(formData.get("slide_count")),
     tone: String(formData.get("tone") || "").trim() || null,
     extra_notes: String(formData.get("extra_notes") || "").trim() || null,
@@ -403,7 +405,77 @@ async function renderSlides(presentation) {
   }
   const editor = document.getElementById("presentation-json");
   editor.value = JSON.stringify(presentation, null, 2);
+  setupSlideCarousel(presentation.slides.length);
   attachCardTilt(root);
+}
+
+function setupSlideCarousel(slideCount) {
+  const root = document.getElementById("slides-root");
+  if (!root) {
+    return;
+  }
+  const slides = Array.from(root.querySelectorAll(".slide-card"));
+  if (slides.length === 0) {
+    return;
+  }
+  currentPreviewSlideIndex = Math.min(currentPreviewSlideIndex, slides.length - 1);
+  if (currentPreviewSlideIndex < 0) {
+    currentPreviewSlideIndex = 0;
+  }
+
+  const updateView = () => {
+    slides.forEach((slide, index) => {
+      slide.classList.toggle("is-active", index === currentPreviewSlideIndex);
+    });
+    const position = document.getElementById("current-slide-position");
+    if (position) {
+      position.textContent = `${currentPreviewSlideIndex + 1} / ${slideCount}`;
+    }
+    const prevButton = document.getElementById("prev-slide-button");
+    const nextButton = document.getElementById("next-slide-button");
+    if (prevButton instanceof HTMLButtonElement) {
+      prevButton.disabled = currentPreviewSlideIndex === 0;
+    }
+    if (nextButton instanceof HTMLButtonElement) {
+      nextButton.disabled = currentPreviewSlideIndex === slides.length - 1;
+    }
+  };
+
+  const moveTo = (nextIndex) => {
+    if (nextIndex < 0 || nextIndex >= slides.length) {
+      return;
+    }
+    currentPreviewSlideIndex = nextIndex;
+    updateView();
+  };
+
+  document.getElementById("prev-slide-button")?.replaceWith(
+    document.getElementById("prev-slide-button").cloneNode(true),
+  );
+  document.getElementById("next-slide-button")?.replaceWith(
+    document.getElementById("next-slide-button").cloneNode(true),
+  );
+
+  document.getElementById("prev-slide-button")?.addEventListener("click", () => {
+    moveTo(currentPreviewSlideIndex - 1);
+  });
+  document.getElementById("next-slide-button")?.addEventListener("click", () => {
+    moveTo(currentPreviewSlideIndex + 1);
+  });
+
+  window.onkeydown = (event) => {
+    if (document.body.dataset.page !== "preview") {
+      return;
+    }
+    if (event.key === "ArrowLeft") {
+      moveTo(currentPreviewSlideIndex - 1);
+    }
+    if (event.key === "ArrowRight") {
+      moveTo(currentPreviewSlideIndex + 1);
+    }
+  };
+
+  updateView();
 }
 
 function downloadBlob(content, contentType, fileName) {

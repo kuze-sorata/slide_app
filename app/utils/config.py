@@ -63,17 +63,16 @@ class Settings(BaseSettings):
         if self.chrome_path and self.chrome_path != "/path/to/chrome-headless-shell":
             return self.chrome_path
 
-        candidates = [
-            Path(
-                "/home/sora/dev/llm-apps/slide_app/.local/puppeteer/chrome-headless-shell/"
-                "linux-146.0.7680.153/chrome-headless-shell-linux64/chrome-headless-shell"
-            ),
-            Path("/home/sora/.cache/puppeteer/chrome-headless-shell/linux-146.0.7680.153/chrome-headless-shell-linux64/chrome-headless-shell"),
-            Path("/home/sora/.cache/puppeteer/chrome/linux-146.0.7680.153/chrome-linux64/chrome"),
-        ]
-        for candidate in candidates:
-            if candidate.exists():
-                return str(candidate)
+        for binary_name in (
+            "chrome-headless-shell",
+            "google-chrome",
+            "chromium",
+            "chromium-browser",
+            "chrome",
+        ):
+            detected = shutil.which(binary_name)
+            if detected:
+                return detected
 
         return self.chrome_path
 

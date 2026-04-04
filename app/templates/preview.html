@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ app_name }} | プレビュー</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20260404-natural-input" />
   </head>
   <body data-page="preview">
     <div class="page-noise" aria-hidden="true"></div>
@@ -85,13 +85,22 @@
             </div>
           </div>
           <div class="slides-toolbar">
-            <p class="slides-toolbar-text">左から右へ読む順でカード表示しています。タイトルを先に、補足は短く保つと資料としてまとまりやすくなります。</p>
+            <p class="slides-toolbar-text">16:9 の単一スライド表示です。左右の矢印で切り替えながら内容を確認できます。</p>
           </div>
-          <div id="slides-root" class="slides-grid"></div>
+          <div class="slide-stage">
+            <button id="prev-slide-button" class="slide-nav-button slide-nav-prev" type="button" aria-label="前のスライド">‹</button>
+            <div class="slide-stage-center">
+              <div class="slide-stage-meta">
+                <span id="current-slide-position" class="meta-pill">1 / 1</span>
+              </div>
+              <div id="slides-root" class="slides-grid"></div>
+            </div>
+            <button id="next-slide-button" class="slide-nav-button slide-nav-next" type="button" aria-label="次のスライド">›</button>
+          </div>
         </section>
       </section>
     </main>
 
-    <script src="{{ url_for('static', path='app.js') }}" defer></script>
+    <script src="{{ url_for('static', path='app.js') }}?v=20260404-natural-input" defer></script>
   </body>
 </html>

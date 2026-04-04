@@ -1,0 +1,55 @@
+{
+  "deck_title": "営業進捗の振り返り",
+  "slides": [
+    {
+      "id": "slide-1",
+      "type": "title",
+      "title": "営業進捗の振り返り",
+      "bullets": [
+        "営業部長向けの共有",
+        "現状と次の打ち手を整理"
+      ],
+      "layout": "layout1"
+    },
+    {
+      "id": "slide-2",
+      "type": "agenda",
+      "title": "本日のアジェンダ",
+      "bullets": [
+        "全体進捗の概要",
+        "主要課題の特定",
+        "今後の対応方針"
+      ],
+      "layout": "layout2"
+    },
+    {
+      "id": "slide-3",
+      "type": "content",
+      "title": "全体進捗は目標未達",
+      "bullets": [
+        "今期目標に対し80%の達成率",
+        "主要案件の進捗に遅れが発生"
+      ],
+      "layout": "layout2"
+    },
+    {
+      "id": "slide-4",
+      "type": "content",
+      "title": "主要案件の停滞要因",
+      "bullets": [
+        "顧客ニーズの深掘り不足",
+        "競合他社との差別化が不明確"
+      ],
+      "layout": "layout3"
+    },
+    {
+      "id": "slide-5",
+      "type": "summary",
+      "title": "今後の優先対応と決定事項",
+      "bullets": [
+        "今後の優先対応と決定事項を進める"
+      ],
+      "layout": "layout4"
+    }
+  ]
+}

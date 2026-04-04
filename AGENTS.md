@@ -37,6 +37,8 @@
   ↓
 [構造化データ(JSON)]
   ↓
+[Layout Resolver / RenderSpec]
+  ↓
 [Rendering Layer (HTML / Marp / Preview)]
   ↓
 [Optional Export (PPTX / PDF / HTML)]
@@ -229,6 +231,7 @@ User Input
 -> Preprocess
 -> LLM inference
 -> JSON validation / repair
+-> Layout Resolver / RenderSpec
 -> Preview rendering
 -> Optional PPTX export
 
@@ -237,6 +240,7 @@ User Input
 # レンダリング要件
 - HTML preview は JSON から描画する
 - slide preview rendering も JSON から描画する
+- JSON のあとに Layout Resolver / RenderSpec を挟み、HTML / Marp / PPTX の見た目判断を共有する
 - HTML や PPTX をモデルの primary output にしない
 - current renderer には最小変更で済むようにする
 

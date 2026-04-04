@@ -1,0 +1,59 @@
+{
+  "deck_title": "営業進捗の振り返り",
+  "slides": [
+    {
+      "id": "slide-1",
+      "type": "title",
+      "title": "営業進捗の振り返り",
+      "bullets": [
+        "営業部長向けの現状共有",
+        "現状と次の打ち手を整理"
+      ],
+      "layout": "layout1"
+    },
+    {
+      "id": "slide-2",
+      "type": "agenda",
+      "title": "本日のアジェンダ",
+      "bullets": [
+        "現状の進捗概況",
+        "主要な課題点",
+        "今後の対応方針"
+      ],
+      "layout": "layout2"
+    },
+    {
+      "id": "slide-3",
+      "type": "content",
+      "title": "主要案件の進捗状況",
+      "bullets": [
+        "A案件: 契約時期が1ヶ月遅延",
+        "B案件: 競合との差別化が不明確",
+        "C案件: 担当者変更で情報共有不足"
+      ],
+      "layout": "layout2"
+    },
+    {
+      "id": "slide-4",
+      "type": "content",
+      "title": "営業活動における課題",
+      "bullets": [
+        "優先順位付けが曖昧な案件管理",
+        "顧客への提案内容が画一的",
+        "部門間の情報共有が不十分"
+      ],
+      "layout": "layout3"
+    },
+    {
+      "id": "slide-5",
+      "type": "summary",
+      "title": "今後の優先対応とアクション",
+      "bullets": [
+        "今後の優先対応とアクションを進める",
+        "B案件: 競合分析を強化し再提案",
+        "C案件: 週次で進捗共有会を実施"
+      ],
+      "layout": "layout4"
+    }
+  ]
+}

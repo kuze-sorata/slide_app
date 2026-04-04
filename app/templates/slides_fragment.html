@@ -1,31 +1,118 @@
-{% for slide in presentation.slides %}
-<article class="slide-card" data-slide-id="{{ slide.id }}">
-  <div class="slide-meta">
-    <span class="slide-number">{{ loop.index }}枚目</span>
-    <span class="slide-type">
-      {% if slide.type == "title" %}表紙{% elif slide.type == "agenda" %}アジェンダ{% elif slide.type == "content" %}本文{% elif slide.type == "summary" %}まとめ{% else %}{{ slide.type }}{% endif %}
-    </span>
-    <span class="slide-type">
-      {% if slide.layout == "layout1" %}レイアウト1{% elif slide.layout == "layout2" %}レイアウト2{% elif slide.layout == "layout3" %}レイアウト3{% elif slide.layout == "layout4" %}レイアウト4{% else %}{{ slide.layout }}{% endif %}
-    </span>
-  </div>
+{% macro bullet_attrs(slide_id, item) -%}
+  {%- if item.bullet_index is not none -%}
+contenteditable="true"
+data-field="bullet"
+data-slide-id="{{ slide_id }}"
+data-bullet-index="{{ item.bullet_index }}"
+  {%- else -%}
+data-derived="true"
+  {%- endif -%}
+{%- endmacro %}
+{% for slide in resolved_presentation.slides %}
+<article
+  class="slide-card slide-type-{{ slide.slide_type }} slide-layout-{{ slide.layout }} pattern-{{ slide.pattern }}"
+  data-slide-id="{{ slide.id }}"
+>
   <div class="slide-accent" aria-hidden="true"></div>
+  {% if slide.pattern == "title_hero" %}
+  <div class="title-hero">
+    <h3
+      class="editable-title title-hero-heading"
+      contenteditable="true"
+      data-field="title"
+      data-slide-id="{{ slide.id }}"
+    >{{ slide.title }}</h3>
+    <div class="title-summary-panel">
+      {% if slide.blocks and slide.blocks[0].items %}
+        {% for item in slide.blocks[0].items %}
+        <p
+          class="editable-bullet title-summary-line"
+          {{ bullet_attrs(slide.id, item) }}
+        >{{ item.text }}</p>
+        {% endfor %}
+      {% else %}
+        <p
+          class="editable-bullet title-summary-line empty-bullet"
+          contenteditable="true"
+          data-field="bullet"
+          data-slide-id="{{ slide.id }}"
+          data-bullet-index="0"
+        ></p>
+      {% endif %}
+    </div>
+  </div>
+  {% elif slide.pattern == "split_columns" %}
   <h3
     class="editable-title"
     contenteditable="true"
     data-field="title"
     data-slide-id="{{ slide.id }}"
   >{{ slide.title }}</h3>
-  <ul class="bullet-list">
-    {% if slide.bullets %}
-      {% for bullet in slide.bullets %}
+  <div class="split-grid">
+    {% for block in slide.blocks %}
+    <section class="split-panel">
+      <p class="split-heading">{{ block.heading }}</p>
+      <ul class="bullet-list split-panel-list">
+        {% for item in block.items %}
+        <li
+          class="editable-bullet"
+          {{ bullet_attrs(slide.id, item) }}
+        >{{ item.text }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endfor %}
+  </div>
+  {% elif slide.pattern == "parallel_cards" or slide.pattern == "agenda_steps" or slide.pattern == "action_summary" %}
+  <h3
+    class="editable-title"
+    contenteditable="true"
+    data-field="title"
+    data-slide-id="{{ slide.id }}"
+  >{{ slide.title }}</h3>
+  <div class="content-card-grid cards-{{ slide.blocks|length if slide.blocks|length <= 4 else 4 }}{% if slide.pattern == 'action_summary' %} summary-card-grid{% endif %}{% if slide.pattern == 'agenda_steps' %} agenda-card-grid{% endif %}">
+    {% if slide.blocks %}
+      {% for block in slide.blocks %}
+      <section class="content-point-card">
+        {% if block.heading %}
+        <p class="content-point-label">{{ block.heading }}</p>
+        {% endif %}
+        {% for item in block.items %}
+        <p
+          class="editable-bullet content-point-body"
+          {{ bullet_attrs(slide.id, item) }}
+        >{{ item.text }}</p>
+        {% endfor %}
+      </section>
+      {% endfor %}
+    {% else %}
+      <section class="content-point-card">
+        <p
+          class="editable-bullet content-point-body empty-bullet"
+          contenteditable="true"
+          data-field="bullet"
+          data-slide-id="{{ slide.id }}"
+          data-bullet-index="0"
+        ></p>
+      </section>
+    {% endif %}
+  </div>
+  {% elif slide.pattern == "standard_list" %}
+  <h3
+    class="editable-title"
+    contenteditable="true"
+    data-field="title"
+    data-slide-id="{{ slide.id }}"
+  >{{ slide.title }}</h3>
+  <ul class="bullet-list standard-bullet-list">
+    {% if slide.blocks %}
+      {% for block in slide.blocks %}
+        {% for item in block.items %}
       <li
         class="editable-bullet"
-        contenteditable="true"
-        data-field="bullet"
-        data-slide-id="{{ slide.id }}"
-        data-bullet-index="{{ loop.index0 }}"
-      >{{ bullet }}</li>
+        {{ bullet_attrs(slide.id, item) }}
+      >{{ item.text }}</li>
+        {% endfor %}
       {% endfor %}
     {% else %}
       <li
@@ -37,5 +124,35 @@
       ></li>
     {% endif %}
   </ul>
+  {% else %}
+  <h3
+    class="editable-title"
+    contenteditable="true"
+    data-field="title"
+    data-slide-id="{{ slide.id }}"
+  >{{ slide.title }}</h3>
+  <ul
+    class="bullet-list"
+  >
+    {% if slide.blocks %}
+      {% for block in slide.blocks %}
+        {% for item in block.items %}
+      <li
+        class="editable-bullet"
+        {{ bullet_attrs(slide.id, item) }}
+      >{{ item.text }}</li>
+        {% endfor %}
+      {% endfor %}
+    {% else %}
+      <li
+        class="editable-bullet empty-bullet"
+        contenteditable="true"
+        data-field="bullet"
+        data-slide-id="{{ slide.id }}"
+        data-bullet-index="0"
+      ></li>
+    {% endif %}
+  </ul>
+  {% endif %}
 </article>
 {% endfor %}

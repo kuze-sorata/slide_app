@@ -17,7 +17,7 @@ APP_DIR = Path(__file__).resolve().parent
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
-    description="Local LLM powered slide draft generator for Japanese internal presentations.",
+    description="API-hosted LLM powered slide draft generator for Japanese internal presentations.",
 )
 
 app.include_router(generate_router)
