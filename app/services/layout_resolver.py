@@ -7,10 +7,11 @@ from app.models.render_spec import (
 )
 from app.models.schema import Presentation, Slide
 from app.utils.slide_design import (
-    content_card_heading,
+    content_card_heading_for_language,
     is_parallel_content_slide,
     layout_label,
     layout3_panel_headings,
+    slide_language,
     slide_role_label,
     slide_type_label,
     split_bullets_for_columns,
@@ -56,6 +57,7 @@ class LayoutResolver:
         return "standard_list"
 
     def _resolve_blocks(self, slide: Slide, pattern: SlidePattern) -> tuple[ResolvedBlock, ...]:
+        language = slide_language(slide)
         indexed_items = tuple(
             ResolvedItem(text=bullet, bullet_index=index)
             for index, bullet in enumerate(slide.bullets)
@@ -74,14 +76,14 @@ class LayoutResolver:
             total = max(len(indexed_items), 1)
             return tuple(
                 ResolvedBlock(
-                    heading=content_card_heading(index, total),
+                    heading=content_card_heading_for_language(index, total, language),
                     items=(item,),
                 )
                 for index, item in enumerate(indexed_items, start=1)
             ) or (
                 ResolvedBlock(
-                    heading=content_card_heading(1, 1),
-                    items=(ResolvedItem(text="補足事項なし", bullet_index=None),),
+                    heading=content_card_heading_for_language(1, 1, language),
+                    items=(ResolvedItem(text="補足事項なし" if language == "ja" else "No additional notes", bullet_index=None),),
                 ),
             )
 
@@ -92,7 +94,7 @@ class LayoutResolver:
                 ResolvedBlock(heading=left_heading, items=tuple(left_items)),
                 ResolvedBlock(
                     heading=right_heading,
-                    items=tuple(right_items) or (ResolvedItem(text="補足事項なし", bullet_index=None),),
+                    items=tuple(right_items) or (ResolvedItem(text="補足事項なし" if language == "ja" else "No additional notes", bullet_index=None),),
                 ),
             )
 
@@ -100,19 +102,19 @@ class LayoutResolver:
             return (
                 ResolvedBlock(
                     heading=None,
-                    items=indexed_items or (ResolvedItem(text="補足事項なし", bullet_index=None),),
+                    items=indexed_items or (ResolvedItem(text="補足事項なし" if language == "ja" else "No additional notes", bullet_index=None),),
                 ),
             )
 
         action_blocks = [
-            ResolvedBlock(heading=f"アクション {index}", items=(item,))
+            ResolvedBlock(heading=(f"アクション {index}" if language == "ja" else f"Action {index}"), items=(item,))
             for index, item in enumerate(indexed_items[:2], start=1)
         ]
         if len(action_blocks) == 1:
             action_blocks.append(
                 ResolvedBlock(
-                    heading="アクション 2",
-                    items=(ResolvedItem(text="次回までの確認事項を整理する", bullet_index=None),),
+                    heading="アクション 2" if language == "ja" else "Action 2",
+                    items=(ResolvedItem(text="次回までの確認事項を整理する" if language == "ja" else "Clarify the follow-up items for the next review", bullet_index=None),),
                 )
             )
         return tuple(action_blocks)

@@ -187,6 +187,11 @@ AUDIENCE_PATTERN = re.compile(
     r"(?P<audience>[^\s、。]{1,20})(向け|に|用)(?:に)?",
 )
 SLIDE_COUNT_PATTERN = re.compile(r"(?P<count>[3-9]|10)枚")
+ENGLISH_AUDIENCE_PATTERNS = (
+    re.compile(r"\bfor\s+(?:a|an|the)?\s*(?P<audience>[^,.]+?)(?:\s+covering|\s+with|\s+about|\s+on|\s+to\b|[,.]|$)", re.IGNORECASE),
+    re.compile(r"\bfor\s+(?P<audience>[^,.]+?)\s+audience\b", re.IGNORECASE),
+)
+ENGLISH_SLIDE_COUNT_PATTERN = re.compile(r"(?P<count>[3-9]|10)[-\s]?slide", re.IGNORECASE)
 
 
 def infer_audience_from_request(text: str) -> str | None:
@@ -196,6 +201,14 @@ def infer_audience_from_request(text: str) -> str | None:
         audience = audience.removesuffix("向け").removesuffix("用")
         if audience and audience not in {"資料", "共有", "説明"}:
             return audience
+    for pattern in ENGLISH_AUDIENCE_PATTERNS:
+        english_match = pattern.search(text)
+        if not english_match:
+            continue
+        audience = english_match.group("audience").strip(" .,:;")
+        audience = re.sub(r"^(?:for|to)\s+", "", audience, flags=re.IGNORECASE)
+        if audience:
+            return audience[:200]
     return None
 
 
@@ -203,6 +216,9 @@ def infer_slide_count_from_request(text: str) -> int | None:
     match = SLIDE_COUNT_PATTERN.search(text)
     if match:
         return int(match.group("count"))
+    english_match = ENGLISH_SLIDE_COUNT_PATTERN.search(text)
+    if english_match:
+        return int(english_match.group("count"))
     return None
 
 
@@ -219,7 +235,17 @@ def infer_theme_from_request(text: str) -> str | None:
             theme = re.sub(r"^[^、。]{1,20}(向けに|向け|用に)", "", theme).strip("、。 ")
             if theme:
                 return theme[:200]
-    first_sentence = text.split("。", 1)[0].strip()
+    english_patterns = (
+        r"(?:create|build|draft|prepare)\s+(?:a|an)?\s*(?:[3-9]|10)[-\s]?slide\s+(?P<theme>[^,.]+?)(?:\s+for\b|[,.]|$)",
+        r"(?:about|on)\s+(?P<theme>[^,.]+?)(?:\s+for\b|[,.]|$)",
+    )
+    for pattern in english_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            theme = match.group("theme").strip(" .,:;")
+            if theme:
+                return theme[:200]
+    first_sentence = re.split(r"[。.!?]", text, maxsplit=1)[0].strip()
     if first_sentence:
         return first_sentence[:200]
     return None
@@ -256,6 +282,25 @@ def infer_objective_from_request(text: str) -> str | None:
         return "要点をわかりやすく説明する"
     if "整理" in text:
         return "論点を整理して共有する"
+    english_patterns = (
+        r"\bto\s+(?P<objective>[^.]+)",
+        r"\bcover(?:ing)?\s+(?P<objective>[^.]+)",
+    )
+    for pattern in english_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            objective = match.group("objective").strip(" .,:;")
+            if objective:
+                return objective[:200]
+    lowered = text.lower()
+    if "update" in lowered:
+        return "Share the current status and next actions"
+    if "proposal" in lowered:
+        return "Explain the proposal and decision points"
+    if "review" in lowered:
+        return "Review the current state and define next actions"
+    if "summary" in lowered:
+        return "Summarize the key points clearly"
     if text.strip():
         return "要点を整理して共有する"
     return None
@@ -269,6 +314,13 @@ def infer_extra_notes_from_request(text: str) -> str | None:
         notes.append("簡潔にまとめる")
     if "結論" in text:
         notes.append("結論を先に示す")
+    lowered = text.lower()
+    if "short" in lowered or "concise" in lowered:
+        notes.append("Keep the wording concise")
+    if "professional" in lowered:
+        notes.append("Use a professional tone")
+    if "meeting" in lowered:
+        notes.append("Make it easy to present in a meeting")
     if notes:
         return " / ".join(dict.fromkeys(notes))
     return None
@@ -287,5 +339,17 @@ def infer_required_points_from_request(text: str) -> list[str]:
     points: list[str] = []
     for keyword, label in mapping:
         if keyword in text and label not in points:
+            points.append(label)
+    english_mapping = (
+        ("progress", "current progress"),
+        ("issue", "key issues"),
+        ("blocker", "major blockers"),
+        ("next action", "next actions"),
+        ("action", "next actions"),
+        ("background", "background"),
+    )
+    lowered = text.lower()
+    for keyword, label in english_mapping:
+        if keyword in lowered and label not in points:
             points.append(label)
     return points[:10]

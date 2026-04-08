@@ -15,6 +15,7 @@ from app.services.slide_format import (
     SLIDE_WIDTH,
     STANDARD_WIDESCREEN_NAME,
 )
+from app.utils.slide_design import is_japanese_text
 
 
 class PptxRenderError(Exception):
@@ -51,7 +52,7 @@ class PptxService:
         deck.slide_height = self.SLIDE_HEIGHT
         deck.core_properties.title = presentation.deck_title
         deck.core_properties.subject = f"Generated slide deck ({STANDARD_WIDESCREEN_NAME})"
-        deck.core_properties.language = "ja-JP"
+        deck.core_properties.language = self._infer_document_language(presentation)
 
         for slide_index, slide in enumerate(resolved.slides, start=1):
             pptx_slide = deck.slides.add_slide(deck.slide_layouts[6])
@@ -61,6 +62,23 @@ class PptxService:
         output = BytesIO()
         deck.save(output)
         return output.getvalue()
+
+    def _infer_document_language(self, presentation: Presentation) -> str:
+        text = " ".join(
+            [presentation.deck_title]
+            + [slide.title for slide in presentation.slides]
+            + [bullet for slide in presentation.slides for bullet in slide.bullets]
+        )
+        if is_japanese_text(text):
+            return "ja-JP"
+        return "en-US"
+
+    def _is_japanese_blocks(self, blocks: Sequence[ResolvedBlock]) -> bool:
+        text = " ".join(
+            [block.heading or "" for block in blocks]
+            + [item.text for block in blocks for item in block.items]
+        )
+        return is_japanese_text(text)
 
     def _render_slide(self, pptx_slide, slide: ResolvedSlide, *, slide_index: int) -> None:
         if slide.pattern == "title_hero":
@@ -227,7 +245,7 @@ class PptxService:
             self._configure_text_frame(header_box.text_frame, vertical_anchor=MSO_ANCHOR.MIDDLE)
             self._add_paragraph(
                 header_box.text_frame,
-                block.heading or "アクション",
+                block.heading or ("アクション" if self._is_japanese_blocks(slide.blocks) else "Action"),
                 font_size=Pt(13),
                 bold=True,
                 color=self.PRIMARY_BLUE,
@@ -332,7 +350,7 @@ class PptxService:
         for block, (left, top, width, height) in zip(blocks, positions, strict=False):
             self._add_content_card(
                 pptx_slide,
-                block.heading or "要点",
+                block.heading or ("要点" if self._is_japanese_blocks(blocks) else "Point"),
                 self._block_body(block),
                 left=left,
                 top=top,
@@ -421,7 +439,7 @@ class PptxService:
         if not bullets:
             self._add_paragraph(
                 body_box.text_frame,
-                "補足事項なし",
+                "補足事項なし" if is_japanese_text(" ".join(bullets)) else "No additional notes",
                 font_size=Pt(16),
                 color=self.MUTED_COLOR,
             )

@@ -1,34 +1,87 @@
-# Slide Draft Generator MVP
+# slide_app
 
-Gemini などの API ホスト型 LLM を使って、日本語の社内資料向けスライド草案を構造化 JSON として生成する FastAPI アプリです。
+`slide_app` is a FastAPI-based slide drafting system that turns a short natural-language request into structured slide JSON, an editable HTML preview, and optional Marp/PDF/PPTX exports.
 
-このリファクタの目的は、ローカル LLM 依存を main inference path から外しつつ、既存の JSON 中心アーキテクチャを維持することです。
+The project focuses on a practical applied-LLM problem: generating first-draft presentation content in a format that is constrained, inspectable, and easy to post-process instead of relying on opaque free-form text generation.
 
-## 方針
+## Quick Summary
 
-- JSON を single source of truth にする
-- 推論層だけを provider abstraction の背後へ移す
-- HTML プレビューと Marp/PDF 出力は極力維持する
-- 生成直後に export を自動実行しない
-- provider を後から差し替えやすくする
+- Input: a short presentation request in Japanese or English
+- Core output: validated slide JSON, not raw prose
+- Review flow: editable HTML preview before any export
+- Export flow: Marp, PDF, and PPTX only when explicitly triggered
+- Demo path: can run locally with `MOCK_GENERATION=true`
 
-## 現在のアーキテクチャ
+## Why This Repo Is Worth Reviewing
+
+- it shows a provider-swappable LLM pipeline instead of coupling the app to one model vendor
+- it uses schema validation and repair before rendering anything user-facing
+- it keeps JSON as the system contract, which makes preview and export layers easier to maintain
+
+## Reviewer Quick Start
+
+If you want the fastest way to understand the project:
+
+1. Read the architecture section below
+2. Open [`samples/sample_input.json`](/home/sora/dev/llm-apps/slide_app/samples/sample_input.json) and [`samples/sample_output.json`](/home/sora/dev/llm-apps/slide_app/samples/sample_output.json)
+3. Run the app in mock mode
+4. Generate a deck and inspect the preview screen
+
+## What It Does
+
+- accepts a presentation request such as topic, audience, objective, and required talking points
+- generates a validated slide deck in a constrained JSON schema
+- renders an HTML preview for review and lightweight edits
+- exports the same deck to Marp markdown, PDF, and PPTX
+- supports multiple inference backends through a provider abstraction
+- supports mock generation for reproducible local demos without external API calls
+- supports a `JP / EN` UI toggle for portfolio-friendly demos
+
+## Why It Matters
+
+Many LLM demos stop at "text in, text out." This project shows a more production-oriented pattern:
+
+- structured output is the system contract
+- validation and repair happen before rendering
+- downstream rendering and export are provider-agnostic
+- the same pipeline can run against hosted APIs or local model servers
+
+This makes the system easier to test, safer to extend, and easier to adapt to different model providers.
+
+## Architecture
 
 ```text
-User Input
+User Request
 -> Preprocess
 -> Prompt Builder
 -> LLM Provider
--> Response Parser / Validator / Repair
--> Structured Slide JSON
--> Layout Resolver / RenderSpec
--> Preview Rendering
--> Optional Export
+-> Response Parse / Validate / Repair
+-> Presentation JSON
+-> Layout Resolver
+-> HTML Preview / Marp / PDF / PPTX
 ```
 
-## JSON 契約
+Core application areas:
 
-生成結果の canonical output は次です。
+- `app/routes/`: FastAPI endpoints for generation, rendering, and export
+- `app/services/`: generation, provider, rendering, Marp, and PPTX services
+- `app/models/`: Pydantic schemas for the slide contract
+- `samples/`: example requests and outputs for quick inspection
+- `tests/`: unit and service-level tests
+
+## Tech Stack
+
+- Python 3
+- FastAPI
+- Pydantic v2
+- httpx
+- Jinja2
+- python-pptx
+- pytest
+
+## Output Contract
+
+The canonical output is structured presentation JSON:
 
 ```json
 {
@@ -45,120 +98,69 @@ User Input
 }
 ```
 
-制約:
+Current generation rules include:
 
-- スライド数は 3〜10
-- bullets は 1〜4
-- title は 30 文字以内
-- bullet は 40 文字以内
-- 出力は日本語
-- 先頭は `title`
-- 最後は `summary`
-- `content` を最低 1 枚含める
+- 3 to 10 slides
+- 1 to 4 bullets per slide
+- first slide must be `title`
+- last slide must be `summary`
+- at least one `content` slide is required
+- output language follows the request language for Japanese and English prompts
 
-## 実装範囲
+Example input: [`samples/sample_input.json`](/home/sora/dev/llm-apps/slide_app/samples/sample_input.json)  
+Example output: [`samples/sample_output.json`](/home/sora/dev/llm-apps/slide_app/samples/sample_output.json)
 
-- FastAPI
-- Pydantic v2 schema
-- provider abstraction
-- API-backed provider
-- Ollama / LM Studio は任意 provider として残す
-- `POST /api/generate`
-- `POST /api/render/html`
-- `POST /api/update`
-- `POST /api/export/marp`
-- `POST /api/export/pdf`
-- `POST /api/export/pptx`
-- 入力フォーム `/`
-- プレビュー画面 `/preview`
-- JSON からのプレビュー編集
-- 16:9 の単一スライドプレビューと左右ナビゲーション
-- Marp markdown 出力
-- PDF 出力
-- PPTX 出力
-- 最低限の pytest
+## Visual Demo
 
-## 入力方針
+Screenshot notes live in [`docs/screenshots/README.md`](/home/sora/dev/llm-apps/slide_app/docs/screenshots/README.md).
+Recommended file paths:
 
-- 主入力は自然文の `資料リクエスト`
-- `テーマ / 資料の目的 / 想定読者` は詳細設定で任意上書き
-- preprocess で自然文から `theme / objective / audience / required_points` を補完
-- 補助入力は自然文の解像度を上げるために使う
+- `docs/screenshots/input_en.png`
+- `docs/screenshots/preview_en.png`
 
-## セットアップ
+If those files are present, GitHub will render the screenshots below.
+
+### English Input UI
+
+![English input UI](docs/screenshots/input_en.png)
+
+### English Preview UI
+
+![English preview UI](docs/screenshots/preview_en.png)
+
+## How To Run
+
+### Fastest Local Demo
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
+export MOCK_GENERATION=true
+uvicorn app.main:app --reload
 ```
 
-## 環境変数
+Then open `http://127.0.0.1:8000/`.
 
-`.env` かシェル環境で設定してください。最短では [`.env.example`](/home/sora/dev/llm-apps/slide_app/.env.example) を `.env` として使い、選んだ provider に応じた API key を埋めてください。
-
-```env
-LLM_PROVIDER=gemini
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
-GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
-
-LLM_API_KEY=
-LLM_MODEL=gpt-4.1-mini
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_TIMEOUT_MS=60000
-LLM_MAX_RETRIES=2
-
-MOCK_GENERATION=false
-GENERATION_TIMEOUT_SECONDS=120
-
-MARP_CLI_PATH=marp
-MARP_THEME=default
-CHROME_PATH=/path/to/chrome-headless-shell
-MARP_TIMEOUT_SECONDS=60
-
-# optional local providers
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=phi3:mini
-LMSTUDIO_BASE_URL=http://localhost:1234
-LMSTUDIO_MODEL=local-model
-```
-
-主な項目:
-
-- `LLM_PROVIDER`
-  - `gemini` / `api` / `openai_compatible` / `ollama` / `lmstudio` を切り替える
-- `LLM_API_KEY`
-  - API provider の認証キー
-- `LLM_MODEL`
-  - 利用モデル名
-- `LLM_BASE_URL`
-  - `chat/completions` 互換 API の base URL
-- `LLM_TIMEOUT_MS`
-  - provider request timeout
-- `LLM_MAX_RETRIES`
-  - transport / rate limit / temporary failure 時の retry 回数
-- structured output 非対応の chat/completions 互換 API では、自動で plain JSON mode へフォールバックします
-
-## 起動方法
-
-通常:
+### Full Setup
 
 ```bash
-.venv/bin/uvicorn app.main:app --reload
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ```
 
-補助スクリプト:
+### Provider Setup
+
+For the fastest reproducible demo, use mock mode:
 
 ```bash
-bash scripts/start_server.sh
+export MOCK_GENERATION=true
 ```
 
-`start_server.sh` は `LLM_PROVIDER=api` を既定にし、`LLM_PROVIDER=ollama` の時だけ Ollama 起動処理を行います。
-
-## Provider 切り替え
-
-Gemini:
+For Gemini:
 
 ```bash
 export LLM_PROVIDER=gemini
@@ -166,7 +168,7 @@ export GEMINI_API_KEY=your_gemini_api_key
 export GEMINI_MODEL=gemini-2.5-flash
 ```
 
-OpenAI compatible API:
+For an OpenAI-compatible endpoint:
 
 ```bash
 export LLM_PROVIDER=api
@@ -175,146 +177,133 @@ export LLM_MODEL=gpt-4.1-mini
 export LLM_BASE_URL=https://api.openai.com/v1
 ```
 
-Ollama:
+For local model servers:
+
+- `LLM_PROVIDER=ollama`
+- `LLM_PROVIDER=lmstudio`
+
+### 3. Start the app
 
 ```bash
-export LLM_PROVIDER=ollama
-export OLLAMA_BASE_URL=http://127.0.0.1:11434
-export OLLAMA_MODEL=phi3:mini
+uvicorn app.main:app --reload
 ```
 
-LM Studio:
+Or use the helper script:
 
 ```bash
-export LLM_PROVIDER=lmstudio
-export LMSTUDIO_BASE_URL=http://localhost:1234
-export LMSTUDIO_MODEL=local-model
+bash scripts/start_server.sh
 ```
 
-モック:
+The helper script defaults to `LLM_PROVIDER=api` and only tries to bootstrap Ollama when `LLM_PROVIDER=ollama`.
+
+### 4. Open the UI
+
+- `http://127.0.0.1:8000/`
+- `http://127.0.0.1:8000/preview`
+
+## Example Local Flow
+
+1. Start the app in mock mode
+2. Paste a short request such as `Create a 5-slide update for a sales director covering current progress, key issues, and next actions.`
+3. Click generate
+4. Review the HTML preview and the generated JSON
+5. Export only if you want Marp, PDF, or PPTX output
+
+## API Surface
+
+- `POST /api/generate`: create validated slide JSON from a request
+- `POST /api/render/html`: render HTML preview from presentation JSON
+- `POST /api/update`: re-validate edited presentation JSON
+- `POST /api/export/marp`: export Marp markdown
+- `POST /api/export/pdf`: export PDF
+- `POST /api/export/pptx`: export PPTX
+- `GET /api/debug/provider-health`: provider health check
+- `GET /api/export/debug/config`: export tool configuration check
+
+Example request:
 
 ```bash
-export MOCK_GENERATION=true
+curl -X POST http://127.0.0.1:8000/api/generate \
+  -H "Content-Type: application/json" \
+  -d @samples/sample_input.json
 ```
 
-## API
+Fixture runner:
 
-### `POST /api/generate`
-
-入力:
-
-```json
-{
-  "user_request": "営業部長向けに、営業進捗の振り返りを5枚で共有したい。現状の進捗、課題、次の打ち手を簡潔に整理したい。数字は仮置きでよい。",
-  "slide_count": 5,
-  "tone": "簡潔で落ち着いた説明",
-  "extra_notes": "数字は仮置きでよい",
-  "required_points": ["進捗", "課題", "次の打ち手"],
-  "forbidden_expressions": ["気合いで", "なんとなく"],
-  "debug_mode": false
-}
+```bash
+python scripts/run_generation_fixture.py \
+  samples/sample_input.json \
+  --output-json /tmp/slide_output.json
 ```
 
-`theme / objective / audience` は省略可能です。省略時は `user_request` から補完します。
+Common verification commands:
 
-出力は `deck_title` / `slides[]` を持つ slide JSON です。
+```bash
+curl http://127.0.0.1:8000/api/debug/provider-health
+./.venv/bin/pytest
+```
 
-### `POST /api/render/html`
+## Environment Variables
 
-slide JSON から HTML preview fragment を返します。
+Copy [`.env.example`](/home/sora/dev/llm-apps/slide_app/.env.example) and set only the variables needed for your chosen provider.
 
-### `POST /api/update`
+Important variables:
 
-編集済み slide JSON を再検証して返します。
+- `LLM_PROVIDER`: `gemini`, `api`, `openai_compatible`, `ollama`, or `lmstudio`
+- `MOCK_GENERATION`: disables external model calls for local demo use
+- `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL`: generic API-compatible provider settings
+- `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`: Gemini settings
+- `OLLAMA_BASE_URL`, `OLLAMA_MODEL`: local Ollama settings
+- `LMSTUDIO_BASE_URL`, `LMSTUDIO_MODEL`: local LM Studio settings
+- `MARP_CLI_PATH`, `CHROME_PATH`: required for PDF export depending on local setup
 
-### `POST /api/export/marp`
-
-slide JSON を Marp markdown に変換します。
-
-### `POST /api/export/pdf`
-
-slide JSON を PDF に変換します。実行はユーザーが明示的に trigger した時だけです。
-
-### `POST /api/export/pptx`
-
-slide JSON を PPTX に変換します。これも手動 export の時だけ実行します。
-
-### `GET /api/debug/provider-health`
-
-現在の provider の設定状態を返します。
-
-### `GET /api/export/debug/config`
-
-Marp / Chrome の解決結果を返します。
-
-## 安定化方針
-
-- prompt は `app/llm/prompts.py` に集約
-- prompt では slide role を固定して 1枚1メッセージを強制する
-- route handler に prompt を inline しない
-- provider は raw text 取得だけに責務を寄せる
-- response parser / validator は `GenerationService` と正規化層で処理
-- 正規化層で bullet の重複除去、layout 補正、summary の action 化を行う
-- `LayoutResolver` が JSON から共通の RenderSpec を作り、HTML / Marp / PPTX で共有する
-- malformed response や invalid JSON は repair / retry を試す
-- timeout, rate limit, temporary API failure を防御的に扱う
-- ログには provider 名、prompt 長、応答時間、失敗理由を出す
-
-## エクスポート
-
-- Preview は JSON から描画する
-- Preview UI は 16:9 の単一スライド表示で、左右の矢印またはキーボード左右キーで切り替える
-- Marp/PDF も同じ JSON から生成する
-- export は手動操作時のみ実行する
-- PPTX は JSON から PowerPoint 用スライドへ変換して出力します
-
-## サンプル
-
-- 入力例: [`samples/sample_input.json`](/home/sora/dev/llm-apps/slide_app/samples/sample_input.json)
-- 出力例: [`samples/sample_output.json`](/home/sora/dev/llm-apps/slide_app/samples/sample_output.json)
-- 品質比較用入力:
-  - [`samples/quality_input_manager_update.json`](/home/sora/dev/llm-apps/slide_app/samples/quality_input_manager_update.json)
-  - [`samples/quality_input_executive_briefing.json`](/home/sora/dev/llm-apps/slide_app/samples/quality_input_executive_briefing.json)
-- 実験ログ:
-  - [`docs/experiments/2026-04-04-prompt-structure-tightening.md`](/home/sora/dev/llm-apps/slide_app/docs/experiments/2026-04-04-prompt-structure-tightening.md)
-- デザイン参考:
-  - [`references/design/README.md`](/home/sora/dev/llm-apps/slide_app/references/design/README.md)
-  - [`docs/design_guidelines.md`](/home/sora/dev/llm-apps/slide_app/docs/design_guidelines.md)
-  - [`docs/slide_patterns.md`](/home/sora/dev/llm-apps/slide_app/docs/slide_patterns.md)
-
-## 開発運用
-
-スライド品質の改善は、小さな差分を branch / PR 単位で積み上げる運用を推奨します。
-
-- Git / GitHub 運用ルール: [`docs/GIT_WORKFLOW.md`](/home/sora/dev/llm-apps/slide_app/docs/GIT_WORKFLOW.md)
-- 実験ログテンプレート: [`docs/EXPERIMENT_LOG_TEMPLATE.md`](/home/sora/dev/llm-apps/slide_app/docs/EXPERIMENT_LOG_TEMPLATE.md)
-- PR テンプレート: [`.github/pull_request_template.md`](/home/sora/dev/llm-apps/slide_app/.github/pull_request_template.md)
-
-基本方針:
-
-- `main` は常に動く状態を維持する
-- 改善テーマごとに branch を切る
-- fixed input で Before / After を比べる
-- PR に仮説、確認方法、リスクを書く
-- 品質改善や挙動変更を伴う作業では、`docs/experiments/YYYY-MM-DD-<topic>.md` に実験ログを残す
-- 実験ログには、仮説、対象入力、変更内容、Before / After、残課題を必ず含める
-
-## テスト
+## Testing
 
 ```bash
 ./.venv/bin/pytest
 ```
 
-固定入力でローカル生成を確認する場合:
+Current test coverage includes schema validation, provider wrappers, rendering, export services, and API-level behavior.
 
-```bash
-.venv/bin/python scripts/run_generation_fixture.py samples/quality_input_manager_update.json
-```
+## Common Setup Notes
 
-## 制限事項
+- if you only want a portfolio demo, set `MOCK_GENERATION=true` and skip API keys
+- if PDF export fails, check `MARP_CLI_PATH` and `CHROME_PATH`
+- if generation fails with a hosted provider, verify `LLM_PROVIDER`, `LLM_API_KEY`, and `LLM_BASE_URL`
 
-- 品質目標は draft-quality です
-- wording より speed と stability を優先しています
-- provider 側の structured output 互換性には差があります
-- `debug_mode=true` は軽量 prompt を使いますが、通常生成より品質が落ちます
-- PPTX export はテキスト中心のシンプルなレイアウトに限定しています
+## Limitations
+
+- the current prompt and validation flow is optimized for Japanese internal presentation drafts
+- visual output quality depends on the selected layout templates and export tooling
+- PDF export depends on local Marp/Chrome availability
+- the system produces draft-quality slides, not final polished design assets
+- there is no persistent storage, auth layer, or asynchronous job queue yet
+
+## Next Steps
+
+- add real screenshots or a short GIF showing input to preview to export flow
+- add request/response fixtures for English prompts and more deck types
+- add lightweight observability around generation latency and provider failures
+- package a one-command local demo path for portfolio reviewers
+
+## Suggested GitHub Metadata
+
+Repository description:
+
+`FastAPI app that generates Japanese internal slide drafts from natural language using API-hosted LLMs and structured JSON.`
+
+Suggested topics:
+
+- `fastapi`
+- `python`
+- `llm`
+- `applied-ai`
+- `structured-output`
+- `pydantic`
+- `prompt-engineering`
+- `pptx`
+
+## Notes
+
+- this repository is intended as a portfolio-ready MVP, not a production deployment
+- local `.env` values and API keys are not included in the repository

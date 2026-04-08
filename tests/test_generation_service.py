@@ -150,6 +150,39 @@ def test_build_simple_slide_generation_prompt_is_shorter() -> None:
     assert "Input:" in simple
 
 
+def test_build_slide_generation_prompt_switches_output_language_for_english_input() -> None:
+    payload = SlideGenerationRequest(
+        user_request=(
+            "Create a 5-slide update for a sales director covering current progress, "
+            "key issues, and next actions."
+        ),
+        slide_count=5,
+    )
+
+    prompt = build_slide_generation_prompt(payload)
+
+    assert "Output language: English" in prompt
+    assert "Use short slide-like phrases suitable for internal documents" in prompt
+    assert "Sales Update Review" in prompt
+    assert "Current progress" in prompt
+    assert "Japanese internal business presentations" not in prompt
+
+
+def test_build_simple_slide_generation_prompt_switches_output_language_for_english_input() -> None:
+    payload = SlideGenerationRequest(
+        user_request=(
+            "Create a 5-slide update for a sales director covering current progress, "
+            "key issues, and next actions."
+        ),
+        slide_count=5,
+    )
+
+    prompt = build_simple_slide_generation_prompt(payload)
+
+    assert "You generate English internal presentation slide drafts." in prompt
+    assert "Use short English business phrases" in prompt
+
+
 class HangingOllamaClient(OllamaClient):
     def __init__(self) -> None:
         super().__init__(base_url="http://localhost:11434", model="phi3:mini")

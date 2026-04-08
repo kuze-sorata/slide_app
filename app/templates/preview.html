@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ app_name }} | プレビュー</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20260404-natural-input" />
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20260408-ui-language-toggle" />
   </head>
   <body data-page="preview">
     <div class="page-noise" aria-hidden="true"></div>
@@ -16,51 +16,55 @@
     <main class="page-shell">
       <header class="topbar">
         <div class="topbar-copy">
-          <p class="eyebrow">プレビュー</p>
-          <h1>スライド草案の確認</h1>
-          <p class="topbar-text">カード編集と JSON 編集を並行できるようにし、更新時に再検証します。</p>
+          <div class="language-toggle" role="group" aria-label="Language toggle">
+            <button class="language-toggle-button" type="button" data-lang-select="en">EN</button>
+            <button class="language-toggle-button" type="button" data-lang-select="ja">JP</button>
+          </div>
+          <p class="eyebrow" data-i18n="preview.eyebrow">プレビュー</p>
+          <h1 data-i18n="preview.title">スライド草案の確認</h1>
+          <p class="topbar-text" data-i18n="preview.topbarText">カード編集と JSON 編集を並行できるようにし、更新時に再検証します。</p>
         </div>
-        <a class="link-button" href="/">入力に戻る</a>
+        <a class="link-button" href="/" data-i18n="preview.backLink">入力に戻る</a>
       </header>
 
       <section class="workspace">
         <aside class="side-panel">
           <div class="panel control-panel">
-            <div class="section-cap">操作パネル</div>
-            <h2>操作</h2>
-            <p class="help-text">
+            <div class="section-cap" data-i18n="preview.controlCap">操作パネル</div>
+            <h2 data-i18n="preview.controlTitle">操作</h2>
+            <p class="help-text" data-i18n="preview.controlHelp">
               タイトルと箇条書きはカード上で直接編集できます。保存時に JSON を再検証します。
             </p>
             <div class="preview-stats">
               <div class="stat-box">
-                <span class="stat-label">資料タイトル</span>
+                <span class="stat-label" data-i18n="preview.statTitleLabel">資料タイトル</span>
                 <strong id="sidebar-title">未読み込み</strong>
               </div>
               <div class="stat-box">
-                <span class="stat-label">スライド枚数</span>
+                <span class="stat-label" data-i18n="preview.statCountLabel">スライド枚数</span>
                 <strong id="slide-count-badge">-</strong>
               </div>
             </div>
             <div class="button-row vertical">
-              <button id="save-json-button" class="primary-button" type="button">JSONを更新</button>
-              <button id="export-marp-button" class="secondary-button" type="button">Marp Markdownを書き出し</button>
-              <button id="export-pdf-button" class="secondary-button" type="button">PDFを書き出し</button>
-              <button id="export-pptx-button" class="secondary-button" type="button">PPTXを書き出し</button>
+              <button id="save-json-button" class="primary-button" type="button" data-i18n="preview.saveJsonButton">JSONを更新</button>
+              <button id="export-marp-button" class="secondary-button" type="button" data-i18n="preview.exportMarpButton">Marp Markdownを書き出し</button>
+              <button id="export-pdf-button" class="secondary-button" type="button" data-i18n="preview.exportPdfButton">PDFを書き出し</button>
+              <button id="export-pptx-button" class="secondary-button" type="button" data-i18n="preview.exportPptxButton">PPTXを書き出し</button>
             </div>
             <div class="tips-card">
-              <h3>編集のヒント</h3>
+              <h3 data-i18n="preview.tipsTitle">編集のヒント</h3>
               <ul class="summary-list compact">
-                <li>1枚につき主張は1つに絞る</li>
-                <li>箇条書きは3点以内を維持する</li>
-                <li>結論がタイトルで伝わる状態にする</li>
+                <li data-i18n="preview.tip1">1枚につき主張は1つに絞る</li>
+                <li data-i18n="preview.tip2">箇条書きは3点以内を維持する</li>
+                <li data-i18n="preview.tip3">結論がタイトルで伝わる状態にする</li>
               </ul>
             </div>
           </div>
 
           <div class="panel">
             <div class="panel-heading">
-              <h2>プレゼン構成JSON</h2>
-              <button id="apply-json-button" class="text-button" type="button">JSONを適用</button>
+              <h2 data-i18n="preview.jsonTitle">プレゼン構成JSON</h2>
+              <button id="apply-json-button" class="text-button" type="button" data-i18n="preview.applyJsonButton">JSONを適用</button>
             </div>
             <textarea id="presentation-json" class="json-editor" spellcheck="false"></textarea>
           </div>
@@ -70,37 +74,37 @@
           <div class="preview-header panel">
             <div class="panel-heading no-margin">
               <div>
-                <p class="eyebrow">スライド</p>
-                <h2 id="presentation-title">プレビュー</h2>
+                <p class="eyebrow" data-i18n="preview.slideEyebrow">スライド</p>
+                <h2 id="presentation-title" data-i18n="preview.presentationTitle">プレビュー</h2>
                 <div class="xp-bar" aria-hidden="true">
                   <span class="xp-fill"></span>
                 </div>
                 <div class="preview-meta">
-                  <span class="meta-pill">カード編集</span>
-                  <span class="meta-pill">JSON正本</span>
-                  <span class="meta-pill">Marp出力</span>
+                  <span class="meta-pill" data-i18n="preview.metaPill1">カード編集</span>
+                  <span class="meta-pill" data-i18n="preview.metaPill2">JSON正本</span>
+                  <span class="meta-pill" data-i18n="preview.metaPill3">Marp出力</span>
                 </div>
               </div>
-              <p id="status-message" class="status-message">生成結果を読み込み中です。</p>
+              <p id="status-message" class="status-message" data-i18n="preview.statusLoading">生成結果を読み込み中です。</p>
             </div>
           </div>
           <div class="slides-toolbar">
-            <p class="slides-toolbar-text">16:9 の単一スライド表示です。左右の矢印で切り替えながら内容を確認できます。</p>
+            <p class="slides-toolbar-text" data-i18n="preview.toolbarText">16:9 の単一スライド表示です。左右の矢印で切り替えながら内容を確認できます。</p>
           </div>
           <div class="slide-stage">
-            <button id="prev-slide-button" class="slide-nav-button slide-nav-prev" type="button" aria-label="前のスライド">‹</button>
+            <button id="prev-slide-button" class="slide-nav-button slide-nav-prev" type="button" aria-label="Previous slide">‹</button>
             <div class="slide-stage-center">
               <div class="slide-stage-meta">
                 <span id="current-slide-position" class="meta-pill">1 / 1</span>
               </div>
               <div id="slides-root" class="slides-grid"></div>
             </div>
-            <button id="next-slide-button" class="slide-nav-button slide-nav-next" type="button" aria-label="次のスライド">›</button>
+            <button id="next-slide-button" class="slide-nav-button slide-nav-next" type="button" aria-label="Next slide">›</button>
           </div>
         </section>
       </section>
     </main>
 
-    <script src="{{ url_for('static', path='app.js') }}?v=20260404-natural-input" defer></script>
+    <script src="{{ url_for('static', path='app.js') }}?v=20260408-ui-language-toggle" defer></script>
   </body>
 </html>

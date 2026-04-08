@@ -154,3 +154,40 @@ def test_layout_resolver_adds_fallback_summary_action_card() -> None:
     assert len(summary_slide.blocks) == 2
     assert summary_slide.blocks[1].items[0].text == "次回までの確認事項を整理する"
     assert summary_slide.blocks[1].items[0].bullet_index is None
+
+
+def test_layout_resolver_uses_english_labels_for_english_slides() -> None:
+    presentation = Presentation.model_validate(
+        {
+            "deck_title": "Sales Update Review",
+            "slides": [
+                {
+                    "id": "slide-1",
+                    "type": "title",
+                    "title": "Sales Update Review",
+                    "bullets": ["For sales director"],
+                    "layout": "layout1",
+                },
+                {
+                    "id": "slide-2",
+                    "type": "content",
+                    "title": "Key Deals Face Delays",
+                    "bullets": ["Longer sales cycles observed", "Customer decision-making slow", "Resource allocation challenges"],
+                    "layout": "layout2",
+                },
+                {
+                    "id": "slide-3",
+                    "type": "summary",
+                    "title": "Focus on Deal Acceleration",
+                    "bullets": ["Reallocate effort to top deals"],
+                    "layout": "layout4",
+                },
+            ],
+        }
+    )
+
+    resolved = LayoutResolver().resolve_presentation(presentation)
+
+    assert resolved.slides[1].blocks[0].heading == "Point 1"
+    assert resolved.slides[2].blocks[0].heading == "Action 1"
+    assert resolved.slides[2].blocks[1].items[0].text == "Clarify the follow-up items for the next review"

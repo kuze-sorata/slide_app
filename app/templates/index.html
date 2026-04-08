@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ app_name }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20260404-natural-input" />
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20260408-ui-language-toggle" />
   </head>
   <body data-page="index">
     <div class="page-noise" aria-hidden="true"></div>
@@ -20,9 +20,9 @@
         <p id="loading-text" class="loading-text">API 経由でモデルへ問い合わせています。数秒から数十秒かかることがあります。</p>
         <p id="loading-detail" class="loading-detail">応答が長い場合は自動でエラー画面に切り替えます。</p>
         <div id="loading-actions" class="loading-actions" hidden>
-          <button id="cancel-generate-button" class="secondary-button" type="button">生成を中止</button>
-          <button id="retry-generate-button" class="primary-button" type="button">もう一度試す</button>
-          <button id="close-overlay-button" class="secondary-button" type="button">入力に戻る</button>
+          <button id="cancel-generate-button" class="secondary-button" type="button" data-i18n="index.cancelButton">生成を中止</button>
+          <button id="retry-generate-button" class="primary-button" type="button" data-i18n="index.retryButton">もう一度試す</button>
+          <button id="close-overlay-button" class="secondary-button" type="button" data-i18n="index.backToInputButton">入力に戻る</button>
         </div>
       </div>
     </div>
@@ -30,51 +30,55 @@
       <section class="hero-panel">
         <div class="hero-copy">
           <div class="crest-mark" aria-hidden="true"></div>
+          <div class="language-toggle" role="group" aria-label="Language toggle">
+            <button class="language-toggle-button" type="button" data-lang-select="en">EN</button>
+            <button class="language-toggle-button" type="button" data-lang-select="ja">JP</button>
+          </div>
           <div class="hero-badge-row">
-            <p class="eyebrow">MVP</p>
-            <span class="hero-badge">日本語構成重視</span>
+            <p class="eyebrow" data-i18n="index.eyebrow">MVP</p>
+            <span class="hero-badge" data-i18n="index.heroBadge">Structured JSON First</span>
           </div>
           <h1>{{ app_name }}</h1>
-          <p class="lead">
-            日本語の社内資料向けに、論理構成の通ったスライド草案を JSON として生成します。
-            JSON を正本として、プレビュー編集と Marp 出力までを最小構成でつなぎます。
+          <p class="lead" data-i18n="index.lead">
+            自然文のリクエストから、短いスライド草案を JSON として生成します。
+            JSON を正本として、プレビュー編集とエクスポートまでを最小構成でつなぎます。
           </p>
           <div class="hero-metrics">
             <div class="metric-card">
-              <span class="metric-label">正本データ</span>
-              <strong>プレゼン構成JSON</strong>
+              <span class="metric-label" data-i18n="index.metricSourceLabel">正本データ</span>
+              <strong data-i18n="index.metricSourceValue">プレゼン構成JSON</strong>
             </div>
             <div class="metric-card">
-              <span class="metric-label">編集対象</span>
-              <strong>タイトル / 箇条書き</strong>
+              <span class="metric-label" data-i18n="index.metricEditableLabel">編集対象</span>
+              <strong data-i18n="index.metricEditableValue">タイトル / 箇条書き</strong>
             </div>
             <div class="metric-card">
-              <span class="metric-label">出力形式</span>
-              <strong>HTML / PDF出力</strong>
+              <span class="metric-label" data-i18n="index.metricOutputLabel">出力形式</span>
+              <strong data-i18n="index.metricOutputValue">HTML / PDF出力</strong>
             </div>
           </div>
           <div class="quest-banner">
-            <span class="quest-banner-label">操作の流れ</span>
+            <span class="quest-banner-label" data-i18n="index.questLabel">操作の流れ</span>
             <div class="quest-steps">
-              <span>入力</span>
-              <span>生成</span>
-              <span>編集</span>
-              <span>出力</span>
+              <span data-i18n="index.stepInput">入力</span>
+              <span data-i18n="index.stepGenerate">生成</span>
+              <span data-i18n="index.stepEdit">編集</span>
+              <span data-i18n="index.stepExport">出力</span>
             </div>
           </div>
         </div>
         <div class="hero-note panel">
-          <div class="section-cap">重要事項</div>
-          <h2>優先していること</h2>
+          <div class="section-cap" data-i18n="index.noteCap">重要事項</div>
+          <h2 data-i18n="index.noteTitle">優先していること</h2>
           <ul class="summary-list">
-            <li>日本語の構成品質</li>
-            <li>1スライド1メッセージ</li>
-            <li>JSONの安定生成と検証</li>
+            <li data-i18n="index.noteItem1">短く整理されたスライド表現</li>
+            <li data-i18n="index.noteItem2">1スライド1メッセージ</li>
+            <li data-i18n="index.noteItem3">JSONの安定生成と検証</li>
           </ul>
           <div class="note-stack">
-            <div class="note-chip">Ollama / LM Studio対応</div>
-            <div class="note-chip">MarpでPDF出力</div>
-            <div class="note-chip">編集後にJSON再検証</div>
+            <div class="note-chip" data-i18n="index.noteChip1">APIホスト型LLM対応</div>
+            <div class="note-chip" data-i18n="index.noteChip2">Marp / PDF / PPTX出力</div>
+            <div class="note-chip" data-i18n="index.noteChip3">編集後にJSON再検証</div>
           </div>
         </div>
       </section>
@@ -83,103 +87,105 @@
         <form id="generation-form" class="panel form-panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">入力</p>
-              <h2>資料生成の入力</h2>
+              <p class="eyebrow" data-i18n="index.formEyebrow">入力</p>
+              <h2 data-i18n="index.formTitle">資料生成の入力</h2>
             </div>
-            <p id="form-status" class="status-message">入力後に生成を実行してください。</p>
+            <p id="form-status" class="status-message" data-i18n="index.formStatusIdle">入力後に生成を実行してください。</p>
           </div>
 
           <div class="form-intro">
             <div class="info-strip">
-              <span class="info-kicker">推奨</span>
-              <p>まずは自然文で、誰向けに何を伝えたいかを書いてください。細かい項目は下の詳細設定で補えます。</p>
+              <span class="info-kicker" data-i18n="index.infoKicker">推奨</span>
+              <p data-i18n="index.infoText">まずは自然文で、誰向けに何を伝えたいかを書いてください。細かい項目は下の詳細設定で補えます。</p>
             </div>
             <div class="input-hints">
               <div class="hint-card">
-                <h3>自然文入力</h3>
-                <p>相手、目的、入れたい論点、制約を一続きで書くと生成品質が上がります。</p>
+                <h3 data-i18n="index.hintTitle1">自然文入力</h3>
+                <p data-i18n="index.hintText1">相手、目的、入れたい論点、制約を一続きで書くと生成品質が上がります。</p>
               </div>
               <div class="hint-card">
-                <h3>補助入力</h3>
-                <p>枚数やトーン、必須論点は詳細設定で上書きできます。</p>
+                <h3 data-i18n="index.hintTitle2">補助入力</h3>
+                <p data-i18n="index.hintText2">枚数やトーン、必須論点は詳細設定で上書きできます。</p>
               </div>
               <div class="hint-card">
-                <h3>おすすめの書き方</h3>
-                <p>「誰向けに、何を共有したいか、何を入れたいか」をそのまま書いてください。</p>
+                <h3 data-i18n="index.hintTitle3">おすすめの書き方</h3>
+                <p data-i18n="index.hintText3">「誰向けに、何を共有したいか、何を入れたいか」をそのまま書いてください。</p>
               </div>
             </div>
           </div>
 
           <div class="form-grid">
             <label class="field wide field-primary">
-              <span>資料リクエスト</span>
-              <small class="field-help">自然文で、相手・目的・入れたい論点・制約を書いてください</small>
-              <textarea name="user_request" rows="6" required>営業部長向けに、営業進捗の振り返りを5枚で共有したい。現状の進捗、課題、次の打ち手を簡潔に整理したい。数字は仮置きでよく、会議でそのまま説明しやすい表現にしたい。</textarea>
+              <span data-i18n="index.fieldRequestLabel">資料リクエスト</span>
+              <small class="field-help" data-i18n="index.fieldRequestHelp">自然文で、相手・目的・入れたい論点・制約を書いてください</small>
+              <textarea name="user_request" rows="6" required data-i18n-placeholder="index.fieldRequestPlaceholder" placeholder="例: Create a 5-slide update for a sales director covering current progress, key issues, and next actions."></textarea>
             </label>
             <label class="field">
-              <span>想定スライド枚数</span>
-              <small class="field-help">3〜10枚</small>
+              <span data-i18n="index.fieldCountLabel">想定スライド枚数</span>
+              <small class="field-help" data-i18n="index.fieldCountHelp">3〜10枚</small>
               <input name="slide_count" type="number" min="3" max="10" value="5" required />
             </label>
             <label class="field">
-              <span>トーン</span>
-              <small class="field-help">省略可</small>
-              <input name="tone" value="簡潔で落ち着いた説明" />
+              <span data-i18n="index.fieldToneLabel">トーン</span>
+              <small class="field-help" data-i18n="index.fieldOptionalHelp">省略可</small>
+              <input name="tone" value="" data-i18n-placeholder="index.fieldTonePlaceholder" placeholder="例: concise and professional" />
             </label>
           </div>
 
           <details class="panel-subsection">
-            <summary>詳細設定</summary>
+            <summary data-i18n="index.detailsSummary">詳細設定</summary>
             <div class="form-grid details-grid">
               <label class="field">
-                <span>テーマ</span>
-                <small class="field-help">空欄なら自然文から補完</small>
-                <input name="theme" value="" />
+                <span data-i18n="index.fieldThemeLabel">テーマ</span>
+                <small class="field-help" data-i18n="index.fieldAutoFillHelp">空欄なら自然文から補完</small>
+                <input name="theme" value="" data-i18n-placeholder="index.fieldThemePlaceholder" placeholder="例: Sales update review" />
               </label>
               <label class="field">
-                <span>資料の目的</span>
-                <small class="field-help">空欄なら自然文から補完</small>
-                <input name="objective" value="" />
+                <span data-i18n="index.fieldObjectiveLabel">資料の目的</span>
+                <small class="field-help" data-i18n="index.fieldAutoFillHelp">空欄なら自然文から補完</small>
+                <input name="objective" value="" data-i18n-placeholder="index.fieldObjectivePlaceholder" placeholder="例: Share current progress and next actions" />
               </label>
               <label class="field">
-                <span>想定読者</span>
-                <small class="field-help">空欄なら自然文から補完</small>
-                <input name="audience" value="" />
+                <span data-i18n="index.fieldAudienceLabel">想定読者</span>
+                <small class="field-help" data-i18n="index.fieldAutoFillHelp">空欄なら自然文から補完</small>
+                <input name="audience" value="" data-i18n-placeholder="index.fieldAudiencePlaceholder" placeholder="例: sales director" />
               </label>
               <label class="field wide">
-                <span>補足メモ</span>
-                <small class="field-help">背景や制約条件を補足</small>
-                <textarea name="extra_notes">数字は仮置きでよい</textarea>
+                <span data-i18n="index.fieldNotesLabel">補足メモ</span>
+                <small class="field-help" data-i18n="index.fieldNotesHelp">背景や制約条件を補足</small>
+                <textarea name="extra_notes" data-i18n-placeholder="index.fieldNotesPlaceholder" placeholder="例: Keep the wording easy to present in a meeting"></textarea>
               </label>
               <label class="field">
-                <span>必ず入れたい論点</span>
-                <small class="field-help">改行区切りで複数入力</small>
-                <textarea name="required_points">進捗
-課題
-次の打ち手</textarea>
+                <span data-i18n="index.fieldRequiredLabel">必ず入れたい論点</span>
+                <small class="field-help" data-i18n="index.fieldMultilineHelp">改行区切りで複数入力</small>
+                <textarea name="required_points" placeholder="例:
+current progress
+key issues
+next actions" data-i18n-placeholder="index.fieldRequiredPlaceholder"></textarea>
               </label>
               <label class="field">
-                <span>避けたい表現</span>
-                <small class="field-help">改行区切りで複数入力</small>
-                <textarea name="forbidden_expressions">気合いで
-なんとなく</textarea>
+                <span data-i18n="index.fieldForbiddenLabel">避けたい表現</span>
+                <small class="field-help" data-i18n="index.fieldMultilineHelp">改行区切りで複数入力</small>
+                <textarea name="forbidden_expressions" placeholder="例:
+various
+somehow" data-i18n-placeholder="index.fieldForbiddenPlaceholder"></textarea>
               </label>
             </div>
           </details>
 
           <div class="footer-actions">
-            <div class="footer-note">
+            <div class="footer-note" data-i18n="index.footerNote">
               生成後はプレビュー画面で直接編集し、そのまま Marp Markdown と PDF に出力できます。
             </div>
             <div class="button-row">
-            <button id="generate-button" class="primary-button" type="submit">スライド草案を生成</button>
-            <a class="link-button" href="/preview">プレビュー画面へ</a>
+            <button id="generate-button" class="primary-button" type="submit" data-i18n="index.generateButton">スライド草案を生成</button>
+            <a class="link-button" href="/preview" data-i18n="index.previewLink">プレビュー画面へ</a>
             </div>
           </div>
         </form>
       </section>
     </main>
 
-    <script src="{{ url_for('static', path='app.js') }}?v=20260404-natural-input" defer></script>
+    <script src="{{ url_for('static', path='app.js') }}?v=20260408-ui-language-toggle" defer></script>
   </body>
 </html>

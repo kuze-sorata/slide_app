@@ -125,3 +125,20 @@ def test_slide_generation_request_uses_generic_objective_fallback() -> None:
 
     assert payload.audience == "開発部"
     assert payload.objective == "要点を整理して共有する"
+
+
+def test_slide_generation_request_derives_fields_from_english_user_request() -> None:
+    payload = SlideGenerationRequest(
+        user_request=(
+            "Create a 5-slide update for a sales director covering current progress, "
+            "key issues, and next actions. Keep the wording short, clear, and easy "
+            "to present in a meeting."
+        ),
+        slide_count=5,
+    )
+
+    assert payload.audience == "sales director"
+    assert payload.theme == "update"
+    assert payload.objective == "present in a meeting"
+    assert payload.required_points == ["current progress", "key issues", "next actions"]
+    assert payload.extra_notes == "Keep the wording concise / Make it easy to present in a meeting"
